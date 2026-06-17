@@ -1,0 +1,20 @@
+// 15+ Product Categories
+export const CATEGORIES = [
+  { id: 'CAT01', name: 'Dairy & Eggs', icon: '🥛', color: '#3b82f6', productCount: 42 },
+  { id: 'CAT02', name: 'Beverages', icon: '🥤', color: '#06b6d4', productCount: 55 },
+  { id: 'CAT03', name: 'Snacks & Chips', icon: '🍿', color: '#f59e0b', productCount: 48 },
+  { id: 'CAT04', name: 'Spices & Masala', icon: '🌶️', color: '#ef4444', productCount: 36 },
+  { id: 'CAT05', name: 'Cooking Oil & Ghee', icon: '🫒', color: '#eab308', productCount: 22 },
+  { id: 'CAT06', name: 'Rice & Flour', icon: '🌾', color: '#a3a3a3', productCount: 28 },
+  { id: 'CAT07', name: 'Personal Care', icon: '🧴', color: '#ec4899', productCount: 45 },
+  { id: 'CAT08', name: 'Household & Cleaning', icon: '🧹', color: '#8b5cf6', productCount: 38 },
+  { id: 'CAT09', name: 'Biscuits & Bakery', icon: '🍪', color: '#d97706', productCount: 40 },
+  { id: 'CAT10', name: 'Confectionery', icon: '🍬', color: '#f472b6', productCount: 35 },
+  { id: 'CAT11', name: 'Instant Food & Noodles', icon: '🍜', color: '#fb923c', productCount: 30 },
+  { id: 'CAT12', name: 'Frozen & Refrigerated', icon: '🧊', color: '#38bdf8', productCount: 25 },
+  { id: 'CAT13', name: 'Baby Care', icon: '👶', color: '#a78bfa', productCount: 18 },
+  { id: 'CAT14', name: 'Condiments & Sauces', icon: '🫙', color: '#fb7185', productCount: 28 },
+  { id: 'CAT15', name: 'Pulses & Lentils', icon: '🫘', color: '#84cc16', productCount: 20 },
+  { id: 'CAT16', name: 'Health & Wellness', icon: '💊', color: '#14b8a6', productCount: 15 },
+  { id: 'CAT17', name: 'Stationery', icon: '📝', color: '#6366f1', productCount: 12 },
+];
