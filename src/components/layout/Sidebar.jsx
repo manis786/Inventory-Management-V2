@@ -1,21 +1,18 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { checkPermission } from '../../data/users';
 import {
   LayoutDashboard, Calculator, ShoppingBag, Layers, Warehouse, ClipboardCheck,
-  Truck, Users, Wallet, Receipt, BarChart3, UserSquare2, Settings, ChevronLeft,
-  ChevronRight, Store, X, ChevronDown, Scale, FileText, TrendingUp, PackageCheck,
-  LineChart, UserCheck, Contact2, History, BookOpen, RefreshCw, Coins, PieChart,
-  Clock, FileX, PackageSearch, BarChart4, TrendingDown, Award, AlertTriangle,
-  Landmark, BadgePercent, ArrowRightLeft, Briefcase, FileSpreadsheet, ArrowRight,
-  ShieldCheck, Sliders
+  Truck, Users, Wallet, BarChart3, ChevronLeft, ChevronRight, Store, 
+  ChevronDown, Scale, FileText, TrendingUp, PackageCheck, History, BookOpen, 
+  RefreshCw, Coins, PieChart, Clock, FileX, PackageSearch, BarChart4, 
+  TrendingDown, Award, AlertTriangle, Landmark, BadgePercent, ArrowRightLeft, 
+  Briefcase, FileSpreadsheet, ArrowRight, ShieldCheck, Sliders, Contact2, UserCheck
 } from 'lucide-react';
 
 export function Sidebar() {
   const {
-    activeModule, setActiveModule, activeReport, setActiveReport,
-    sidebarCollapsed, setSidebarCollapsed, mobileSidebarOpen, setMobileSidebarOpen,
-    currentUser
+    activeModule, setActiveModule, setActiveReport,
+    sidebarCollapsed, setSidebarCollapsed
   } = useApp();
 
   const [expandedSubmenus, setExpandedSubmenus] = useState({
@@ -24,12 +21,10 @@ export function Sidebar() {
     'finance_reports': false
   });
 
-  const [collapsedGroups, setCollapsedGroups] = useState({
-    'Operations': false, 'Supply Chain': false, 'Finance & Governance': false, 'System': false
-  });
-
-  const toggleSubmenu = (menuKey, e) => { e.stopPropagation(); setExpandedSubmenus(prev => ({ ...prev, [menuKey]: !prev[menuKey] })); };
-  const toggleGroup = (groupTitle) => { setCollapsedGroups(prev => ({ ...prev, [groupTitle]: !prev[groupTitle] })); };
+  const toggleSubmenu = (menuKey, e) => { 
+    e.stopPropagation(); 
+    setExpandedSubmenus(prev => ({ ...prev, [menuKey]: !prev[menuKey] })); 
+  };
 
   const menuGroups = [
     {
@@ -38,6 +33,7 @@ export function Sidebar() {
         { name: 'Dashboard', icon: LayoutDashboard },
         { name: 'POS Sales', icon: Calculator },
         { name: 'Products', icon: ShoppingBag },
+        { name: 'Categories', icon: Layers }, // Naya Add kiya
         { name: 'Inventory', icon: Warehouse },
         {
           name: 'Operations Reports', icon: BarChart3, hasSubmenu: true, submenuKey: 'operations_reports',
@@ -108,7 +104,7 @@ export function Sidebar() {
       <div className="h-16 flex items-center justify-between px-5 border-b border-slate-800/30">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-xl bg-indigo-600 text-white"><Store className="w-5 h-5" /></div>
-          {!sidebarCollapsed && <span className="font-black text-white">Exclusive Mart <span className="text-xs text-indigo-400">V1.01</span></span>}
+          {!sidebarCollapsed && <span className="font-black text-white">Exclusive Mart</span>}
         </div>
         <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="text-slate-400">
           {sidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
@@ -122,19 +118,27 @@ export function Sidebar() {
             {group.items.map((item) => (
               <div key={item.name} className="relative group">
                 <button
-                  onClick={(e) => item.hasSubmenu ? toggleSubmenu(item.submenuKey, e) : (setActiveModule(item.name), setActiveReport(null))}
+                  onClick={(e) => {
+                    if (item.hasSubmenu) {
+                      toggleSubmenu(item.submenuKey, e);
+                    } else {
+                      setActiveModule(item.name);
+                      setActiveReport(null);
+                    }
+                  }}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium transition-all ${activeModule === item.name ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800/50 text-slate-400'}`}
                 >
                   <div className="flex items-center gap-3"><item.icon size={16} /> {!sidebarCollapsed && item.name}</div>
                   {item.hasSubmenu && !sidebarCollapsed && <ChevronDown size={14} className={`transition-transform ${expandedSubmenus[item.submenuKey] ? 'rotate-180' : ''}`} />}
                 </button>
+                
+                {/* Submenu Logic */}
                 {item.hasSubmenu && expandedSubmenus[item.submenuKey] && !sidebarCollapsed && (
                   <div className="pl-4 mt-1 border-l border-slate-800 ml-5 space-y-0.5">
                     {item.subItems.map((sub) => (
                       <button key={sub.id} onClick={() => { setActiveModule('Reports'); setActiveReport(sub.id); }}
                         className="group flex items-center justify-between w-full px-3 py-1.5 text-[11px] text-slate-500 hover:text-indigo-400 transition-all rounded-md hover:bg-slate-800/50">
                         <span className="flex items-center gap-2"><sub.icon size={13} /> {sub.name}</span>
-                        <ArrowRight size={12} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
                       </button>
                     ))}
                   </div>
@@ -147,4 +151,4 @@ export function Sidebar() {
     </aside>
   );
 }
-export default Sidebar;
+export default Sidebar
