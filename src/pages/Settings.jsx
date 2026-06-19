@@ -18,30 +18,42 @@ export function Settings() {
   const {
     storeSettings,
     cartTaxPercent,
-    setCartTaxPercent,
+    saveStoreSettings,
     addToast
   } = useApp();
 
   // Local Form state
-  const [storeName, setStoreName] = useState(storeSettings.name);
-  const [storeTagline, setStoreTagline] = useState(storeSettings.tagline);
-  const [storeOwner, setStoreOwner] = useState(storeSettings.owner);
-  const [storeAddress, setStoreAddress] = useState(storeSettings.address);
-  const [storePhone, setStorePhone] = useState(storeSettings.phone);
-  const [storeEmail, setStoreEmail] = useState(storeSettings.email);
-  const [storeNtn, setStoreNtn] = useState(storeSettings.ntn);
+  const [storeName, setStoreName] = useState(storeSettings.name || '');
+  const [storeTagline, setStoreTagline] = useState(storeSettings.tagline || '');
+  const [storeOwner, setStoreOwner] = useState(storeSettings.owner || '');
+  const [storeAddress, setStoreAddress] = useState(storeSettings.address || '');
+  const [storePhone, setStorePhone] = useState(storeSettings.phone || '');
+  const [storeEmail, setStoreEmail] = useState(storeSettings.email || '');
+  const [storeNtn, setStoreNtn] = useState(storeSettings.ntn || '');
 
   const [saving, setSaving] = useState(false);
 
   // Handle save
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
-
-    setTimeout(() => {
+    try {
+      await saveStoreSettings({
+        name: storeName,
+        tagline: storeTagline,
+        owner: storeOwner,
+        address: storeAddress,
+        phone: storePhone,
+        email: storeEmail,
+        ntn: storeNtn,
+        branches: storeSettings.branches || [],
+        cartTaxPercent: cartTaxPercent
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
       setSaving(false);
-      addToast('Application configuration settings saved successfully!', 'success');
-    }, 800);
+    }
   };
 
   // Handle factory reset simulation

@@ -108,7 +108,7 @@ export function Sidebar() {
       <div className="h-16 flex items-center justify-between px-5 border-b border-slate-800/30">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-xl bg-indigo-600 text-white"><Store className="w-5 h-5" /></div>
-          {!sidebarCollapsed && <span className="font-black text-white">MartPro <span className="text-xs text-indigo-400">V2</span></span>}
+          {!sidebarCollapsed && <span className="font-black text-white">Exclusive Mart <span className="text-xs text-indigo-400">V1.01</span></span>}
         </div>
         <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="text-slate-400">
           {sidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
@@ -121,7 +121,7 @@ export function Sidebar() {
             {!sidebarCollapsed && <div className="px-3 text-[10px] font-black uppercase text-slate-600 tracking-wider mb-2">{group.title}</div>}
             {group.items.map((item) => (
               <div key={item.name} className="relative group">
-                <button 
+                <button
                   onClick={(e) => item.hasSubmenu ? toggleSubmenu(item.submenuKey, e) : (setActiveModule(item.name), setActiveReport(null))}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium transition-all ${activeModule === item.name ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800/50 text-slate-400'}`}
                 >

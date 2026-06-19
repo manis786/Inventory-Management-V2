@@ -9,13 +9,13 @@ export const MONTHLY_ANALYTICS = [
 ];
 
 export const WEEKLY_SALES = [
-  { day: 'Mon', sales: 85000, count: 52 },
+  { day: 'Mon', sales: 185000, count: 95 },
   { day: 'Tue', sales: 92000, count: 58 },
   { day: 'Wed', sales: 110000, count: 66 },
   { day: 'Thu', sales: 95000, count: 60 },
   { day: 'Fri', sales: 155000, count: 98 }, // Weekend start
   { day: 'Sat', sales: 220000, count: 142 }, // Peak day
-  { day: 'Sun', sales: 185000, count: 115 }
+  { day: 'Sun', sales: 15000, count: 5 }
 ];
 
 export const HOURLY_SALES = [
@@ -25,15 +25,15 @@ export const HOURLY_SALES = [
   { hour: '12:00', sales: 55000 },
   { hour: '13:00', sales: 38000 }, // Lunch dip
   { hour: '14:00', sales: 48000 },
-  { hour: '15:00', sales: 60000 },
-  { hour: '16:00', sales: 85000 },
+  { hour: '15:00', sales: 160000 },
+  { hour: '16:00', sales: 150000 },
   { hour: '17:00', sales: 110000 }, // Evening rush
   { hour: '18:00', sales: 135000 },
   { hour: '19:00', sales: 160000 }, // Peak hour
   { hour: '20:00', sales: 145000 },
-  { hour: '21:00', sales: 98000 },
-  { hour: '22:00', sales: 65000 },
-  { hour: '23:00', sales: 30000 },
+  { hour: '21:00', sales: 198000 },
+  { hour: '22:00', sales: 185000 },
+  { hour: '23:00', sales: 160000 },
 ];
 
 export const CATEGORY_DISTRIBUTION = [
@@ -53,7 +53,7 @@ export const PAYMENT_METHOD_SHARE = [
   { name: 'Cash', value: 1245000, color: '#10b981' },
   { name: 'Credit Card', value: 380000, color: '#3b82f6' },
   { name: 'Bank Transfer / EasyPaisa', value: 145000, color: '#f59e0b' },
-  { name: 'Store Credit (Udhaar)', value: 95000, color: '#ef4444' }
+  { name: 'Credit', value: 95000, color: '#ef4444' }
 ];
 
 export const BRANCH_ANALYTICS = [

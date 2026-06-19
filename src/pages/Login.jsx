@@ -5,30 +5,22 @@ import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card'
 import { Lock, Mail, Eye, EyeOff, Building2 } from 'lucide-react';
 
 export function Login() {
-  const { addToast } = useApp();
+  const { login, addToast } = useApp();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Dummy Frontend Validation Check
-    // Aap yahan apne mutabiq credentials badal sakte hain
-    setTimeout(() => {
-      if (email === 'admin@supermart.com' && password === 'admin123') {
-        localStorage.setItem('isLoggedIn', 'true');
-        addToast('Welcome back! Login Successful.', 'success');
-        
-        // Page reload taake App.jsx immediate login detect kare aur dashboard par le jaye
-        window.location.reload();
-      } else {
-        setIsLoading(false);
-        addToast('Invalid email or password. Try admin@supermart.com / admin123', 'error');
-      }
-    }, 1200); // Ek realistic loader effect ke liye timeout lagaya hai
+    const success = await login(email, password);
+    if (success) {
+      window.location.reload();
+    } else {
+      setIsLoading(false);
+    }
   };
 
   return (

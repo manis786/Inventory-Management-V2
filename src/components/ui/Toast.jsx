@@ -3,14 +3,20 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { AlertCircle, CheckCircle, Info, X, XCircle } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
+// Toast.jsx (ToastContainer component)
 export function ToastContainer() {
-  const { toasts, removeToast } = useApp();
+  const { toasts = [] } = useApp(); // Default value add karein
 
   return (
     <div className="fixed bottom-5 right-5 z-[100] flex flex-col gap-2 max-w-sm w-full no-print">
       <AnimatePresence>
-        {toasts.map((toast) => (
-          <ToastItem key={toast.id} toast={toast} onClose={() => removeToast(toast.id)} />
+        {/* Safety check before mapping */}
+        {(toasts || []).map((toast) => (
+          <ToastItem 
+             key={toast.id} 
+             toast={toast} 
+             onClose={() => removeToast(toast.id)} 
+          />
         ))}
       </AnimatePresence>
     </div>

@@ -1,5 +1,5 @@
 // 100+ Sales Transactions
-import PRODUCTS from './products';
+import PRODUCTS from './products.js';
 
 const CUSTOMER_NAMES = [
   'Haji Amjad Ali','Kamran Sheikh','Shagufta Begum','Raheem Ahmed','Walk-In Customer',

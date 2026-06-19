@@ -1,5 +1,5 @@
 // 50+ Purchase Orders
-import { SUPPLIERS } from './suppliers';
+import { SUPPLIERS } from './suppliers.js';
 
 const PO_STATUSES = ['Received','Received','Received','Pending','Partial','Cancelled'];
 
