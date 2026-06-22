@@ -6,38 +6,80 @@ const AppContext = createContext();
 export function AppProvider({ children }) {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [suppliers,setSuppliers]= useState([])
-  const [activeModule, setActiveModule] = useState('Dashboard'); 
-  const [activeReport, setActiveReport] = useState(null);       
+  const [suppliers, setSuppliers] = useState([]);
+  const [purchases, setPurchases] = useState([]);
+  const [activeModule, setActiveModule] = useState('Dashboard');
+  const [activeReport, setActiveReport] = useState(null);
 
-  const fetchProducts = async () => {
+  // --- Toast Notification Handler ---
+  const addToast = (message, type = 'info') => {
+    // Aap yahan apni toast library (jaise react-toastify) use kar sakte hain
+    console.log(`[${type.toUpperCase()}]: ${message}`);
+    alert(message); 
+  };
+
+  // --- Purchases CRUD ---
+  const fetchPurchases = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/products');
-      if (Array.isArray(res.data)) setProducts(res.data);
-      else if (res.data?.data && Array.isArray(res.data.data)) setProducts(res.data.data);
-      else if (res.data?.products && Array.isArray(res.data.products)) setProducts(res.data.products);
-      else setProducts([]);
+      const res = await axios.get('http://localhost:5000/api/purchases');
+      setPurchases(Array.isArray(res.data.data) ? res.data.data : []);
     } catch (err) {
-      console.error("Fetch Products Error:", err);
-      setProducts([]); 
+      console.error("Fetch Purchases Error:", err);
+      setPurchases([]);
     }
   };
 
+  const addPurchaseOrder = async (poData) => {
+    try {
+      console.log("Sending PO Data to Server:", poData);
+      const res = await axios.post('http://localhost:5000/api/purchases', poData);
+      
+      if(res.data) {
+         await fetchPurchases(); 
+         addToast('Purchase Order created successfully!', 'success');
+      }
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || err.message;
+      console.error("Add PO Error:", errorMsg);
+      addToast(`Error: ${errorMsg}`, 'error');
+    }
+  };
+
+  const receivePurchaseOrder = async (id) => {
+  try {
+    // API call karein jo status update kare
+    await axios.patch(`http://localhost:5000/api/purchases/${id}/receive`);
+    fetchPurchases(); // List update ho jayegi
+  } catch (err) {
+    console.error("Approval Error:", err);
+  }
+};
+  // --- Products CRUD ---
+  const fetchProducts = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/api/products');
+      setProducts(Array.isArray(res.data) ? res.data : (res.data.data || []));
+    } catch (err) {
+      console.error("Fetch Products Error:", err);
+      setProducts([]);
+    }
+  };
+
+  // --- Categories CRUD ---
   const fetchCategories = async () => {
     try {
       const res = await axios.get('http://localhost:5000/api/categories');
-      // Backend response check karo, agar data object ke andar hai toh res.data.data karo
       setCategories(Array.isArray(res.data) ? res.data : (res.data.data || []));
     } catch (err) {
       console.error("Fetch Categories Error:", err);
       setCategories([]);
     }
   };
-// Suppliers CRUD
-const fetchSuppliers = async () => {
+
+  // --- Suppliers CRUD ---
+  const fetchSuppliers = async () => {
     try {
       const res = await axios.get('http://localhost:5000/api/suppliers');
-      // Backend response handle karne ke liye
       setSuppliers(Array.isArray(res.data) ? res.data : (res.data.data || []));
     } catch (err) {
       console.error("Fetch Suppliers Error:", err);
@@ -48,55 +90,28 @@ const fetchSuppliers = async () => {
   const addSupplier = async (supplierData) => {
     try {
       await axios.post('http://localhost:5000/api/suppliers', supplierData);
-      fetchSuppliers(); // Naya data load karne ke liye refresh
+      fetchSuppliers();
     } catch (err) {
       console.error("Add Supplier Error:", err);
     }
   };
 
-  const updateSupplier = async (supplier) => {
-    try {
-      await axios.put(`http://localhost:5000/api/suppliers/${supplier._id}`, supplier);
-      fetchSuppliers();
-    } catch (err) {
-      console.error("Update Supplier Error:", err);
-    }
-  };
-
-  const addSupplierPayment = async (id, amount, method) => {
-    try {
-      await axios.post(`http://localhost:5000/api/suppliers/${id}/payment`, { amount, method });
-      fetchSuppliers();
-    } catch (err) {
-      console.error("Payment Error:", err);
-    }
-  };
-
-  // App start hotay hi dono ko fetch karo
   useEffect(() => {
     fetchProducts();
     fetchCategories();
-    fetchSuppliers()
+    fetchSuppliers();
+    fetchPurchases();
   }, []);
 
   return (
-    <AppContext.Provider value={{ 
-      products, 
-      setProducts, 
-      fetchProducts,
-      categories,           // <--- Export kiya
-      setCategories,        // <--- Export kiya
-      fetchCategories,      // <--- Export kiya
-      activeModule,
-      setActiveModule,
-      activeReport,
-      setActiveReport,
-      suppliers,
-      setSuppliers,
-      fetchSuppliers,
-      addSupplier, 
-      updateSupplier, 
-      addSupplierPayment 
+    <AppContext.Provider value={{
+      products, setProducts, fetchProducts,
+      categories, setCategories, fetchCategories,
+      suppliers, setSuppliers, fetchSuppliers, addSupplier,
+      purchases, addPurchaseOrder, receivePurchaseOrder,
+      activeModule, setActiveModule,
+      activeReport, setActiveReport,
+      addToast
     }}>
       {children}
     </AppContext.Provider>
