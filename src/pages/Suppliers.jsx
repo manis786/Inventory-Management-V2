@@ -13,8 +13,8 @@ import { Truck, Landmark, PlusCircle, CreditCard, Star, FileText, Settings } fro
 
 export function Suppliers() {
   const {
-    suppliers,
-    purchases,
+    suppliers = [],
+    purchases = [],
     addSupplier,
     updateSupplier,
     addSupplierPayment,
@@ -24,6 +24,7 @@ export function Suppliers() {
   // Outstanding payables
   const totalPayables = suppliers.reduce((sum, s) => sum + s.balance, 0);
   const activeCount = suppliers.filter(s => s.status === 'active').length;
+
 
   // Modals state
   const [profileModalOpen, setProfileModalOpen] = useState(false);
@@ -40,7 +41,9 @@ export function Suppliers() {
     address: '',
     balance: '',
     paymentTerms: 'Net 30'
+
   });
+
 
   // Payment popup state
   const [payModalOpen, setPayModalOpen] = useState(false);
@@ -63,6 +66,7 @@ export function Suppliers() {
       city: formData.city,
       address: formData.address,
       balance: Number(formData.balance || 0),
+      status: formData.status,
       paymentTerms: formData.paymentTerms
     };
 
@@ -209,7 +213,7 @@ export function Suppliers() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-100 dark:border-slate-850">
         <div>
           <h1 className="text-xl md:text-2xl font-black text-slate-855 dark:text-white tracking-tight">
-            Wholesale Suppliers (20+)
+            Suppliers Dashbaord
           </h1>
           <p className="text-xs text-slate-405 dark:text-slate-500">
             Monitor supplier balances, view PO order statistics, and record check disbursements.
@@ -251,7 +255,7 @@ export function Suppliers() {
         totalItems={suppliers.length}
         itemsPerPage={12}
         currentPage={1}
-        onPageChange={() => {}}
+        onPageChange={() => { }}
         emptyMessage="No wholesale suppliers registered in the database."
       />
 
@@ -328,6 +332,14 @@ export function Suppliers() {
               <option value="Net 15">Net 15 Days</option>
               <option value="Net 30">Net 30 Days</option>
               <option value="Net 45">Net 45 Days</option>
+            </Select>
+            <Select
+              label="Supplier Status"
+              value={formData.status || 'active'}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+            >
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
             </Select>
           </div>
 
