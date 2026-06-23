@@ -96,7 +96,15 @@ const handleOpenDetails = (po) => {
   setDetailModalOpen(true); 
 };
   const columns = [
-    { key: 'poNumber', label: 'PO Number', render: (row) => row.poNumber || `PO-${row._id.slice(-5).toUpperCase()}` },
+    { 
+  key: 'poNumber', 
+  label: 'PO Code', 
+  render: (row) => (
+    <span className="bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded text-[11px]">
+      {row.poNumber || `PO-${row._id.slice(-5).toUpperCase()}`}
+    </span>
+  ) 
+},
     { key: 'date', label: 'Order Date', render: (row) => new Date(row.date).toLocaleDateString('en-GB') },
     // { key: 'id', label: 'PO Number' },
     // { key: 'date', label: 'Order Date' },

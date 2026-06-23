@@ -91,7 +91,16 @@ export function Suppliers() {
   };
 
   const columns = [
-    { key: 'id', label: 'Code', sortable: true },
+    {
+  key: '_id',
+  label: 'Supplier Code',
+  sortable: true,
+  render: (row) => (
+    <span className="font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded text-[11px]">
+      {`SUP-${row._id.slice(-4).toUpperCase()}`}
+    </span>
+  )
+},
     {
       key: 'name', label: 'Supplier Details', sortable: true, render: (row) => (
         <div className="flex flex-col"><span className="font-bold text-slate-805">{row.name}</span><span className="text-[10px] text-slate-400">Rep: {row.contact} | City: {row.city}</span></div>
