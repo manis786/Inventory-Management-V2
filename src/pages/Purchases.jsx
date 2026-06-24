@@ -11,7 +11,7 @@ import { formatPKR } from '../data/store';
 import { PlusCircle, Trash2, Eye } from 'lucide-react';
 
 export function Purchases() {
-  const { purchases = [], suppliers = [], products = [], setProducts, addPurchaseOrder, receivePurchaseOrder, addToast } = useApp();
+  const { purchases = [], suppliers = [], products = [], setProducts, addPurchaseOrder, receivePurchaseOrder, addToast, addMovement } = useApp();
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [selectedSupplierId, setSelectedSupplierId] = useState('');
@@ -45,12 +45,24 @@ export function Purchases() {
         const product = products.find(p => p._id === item.product?._id);
         if (product) {
           const newStock = Number(product.stock) + Number(item.quantity);
-          await axios.patch(`http://localhost:5000/api/products/${product._id}`, { stock: newStock });
+          await axios.put(`http://localhost:5000/api/products/${product._id}`, { stock: newStock });
           setProducts(prev => prev.map(p => p._id === product._id ? { ...p, stock: newStock } : p));
+          
+          // Movement Logic ab loop ke andar hai aur sahi kaam karega
+          if (addMovement) {
+            addMovement({
+              type: 'PURCHASE',
+              productName: item.product?.name || item.name,
+              quantity: item.quantity,
+              date: new Date().toISOString(),
+              ref: po.poNumber
+            });
+          }
         }
       }
       if (addToast) addToast('Order Approved & Stock Updated!', 'success');
     } catch (err) {
+      console.error("Approval Error:", err);
       if (addToast) addToast('Failed to update stock', 'error');
     }
   };
@@ -79,12 +91,14 @@ export function Purchases() {
     { key: 'supplierName', label: 'Supplier', render: (row) => row.supplier?.name || 'N/A' },
     { key: 'totalAmount', label: 'Total Value', render: (row) => formatPKR(row.totalAmount) },
     { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
-    { key: 'actions', label: 'Actions', render: (row) => (
+    {
+      key: 'actions', label: 'Actions', render: (row) => (
         <div className="flex gap-2">
           <Button variant="ghost" icon={Eye} onClick={() => handleOpenDetails(row)} />
           {row.status === 'Pending' && <Button variant="success" size="sm" onClick={() => handleApprovePO(row)}>Approve</Button>}
         </div>
-    )}
+      )
+    }
   ];
 
   return (
@@ -96,13 +110,13 @@ export function Purchases() {
       <Table columns={columns} data={purchases || []} />
 
       <Modal isOpen={createModalOpen} onClose={() => setCreateModalOpen(false)} title="Draft Purchase Order" size="xl">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 p-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 p-4 max-h-[80vh] overflow-y-auto">
           <div className="lg:col-span-5 space-y-4">
             <Select label="Select Supplier" value={selectedSupplierId} onChange={(e) => setSelectedSupplierId(e.target.value)}>
               <option value="">Choose supplier...</option>
               {suppliers.map((s) => <option key={s._id} value={s._id}>{s.name}</option>)}
             </Select>
-            <form onSubmit={handleAddItem} className="space-y-3">
+            <form onSubmit={handleAddItem} className="space-y-3 p-4 border rounded-lg bg-gray-50">
               <Select label="Choose Product" value={draftProductId} onChange={(e) => handleProductSelect(e.target.value)}>
                 <option value="">Choose item...</option>
                 {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -115,44 +129,55 @@ export function Purchases() {
             </form>
           </div>
           <div className="lg:col-span-7">
-            <div className="h-[300px] overflow-y-auto divide-y">
-              {poItems.map((item, idx) => (
-                <div key={`${item.productId}-${idx}`} className="p-3 flex justify-between text-xs">
-                  <span>{item.name}</span>
-                  <span>{formatPKR(item.total)}</span>
-                  <button onClick={() => handleRemoveItem(idx)}><Trash2 className="w-4 h-4 text-rose-500" /></button>
-                </div>
-              ))}
+            <h3 className="font-bold text-sm mb-2">Order Items</h3>
+            <div className="h-[250px] overflow-y-auto border rounded-lg divide-y bg-white">
+              {poItems.length === 0 ? (
+                <p className="p-4 text-center text-gray-400 text-sm">No items added yet</p>
+              ) : (
+                poItems.map((item, idx) => (
+                  <div key={`${item.productId}-${idx}`} className="p-3 flex justify-between text-xs items-center">
+                    <span className="font-medium">{item.name}</span>
+                    <span className="text-gray-600">{formatPKR(item.total)}</span>
+                    <button onClick={() => handleRemoveItem(idx)} className="text-rose-500 hover:text-rose-700">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
-            <Button variant="success" className="w-full mt-4" onClick={handlePoSubmit} disabled={poItems.length === 0}>Submit Order</Button>
+            <Button variant="success" className="w-full mt-4" onClick={handlePoSubmit} disabled={poItems.length === 0}>
+              Submit Order
+            </Button>
           </div>
         </div>
       </Modal>
 
-      <Modal isOpen={detailModalOpen} onClose={() => setDetailModalOpen(false)} title="Order Details" size="2xl" className="max-w-3xl" >
+      <Modal isOpen={detailModalOpen} onClose={() => setDetailModalOpen(false)} title="Order Details" size="2xl">
         {selectedPO && (
-          <div className="p-4">
-            <div className="flex justify-between mb-4 text-sm text-gray-600">
+          <div className="p-4 w-full">
+            <div className="flex justify-between mb-6 text-sm text-gray-600 border-b pb-4">
               <p><strong>PO Number:</strong> {selectedPO.poNumber || `PO-${selectedPO._id?.slice(-5).toUpperCase()}`}</p>
               <p><strong>Date:</strong> {new Date(selectedPO.date).toLocaleDateString('en-GB')}</p>
             </div>
-            <div className="grid grid-cols-4 gap-2 bg-gray-100 p-2 rounded text-xs font-bold uppercase text-gray-700">
-              <div>Product</div>
-              <div className="text-center">Qty</div>
-              <div className="text-right">Price</div>
-              <div className="text-right">Total</div>
+            <div className="grid grid-cols-12 gap-2 bg-gray-100 p-3 rounded-lg text-xs font-bold uppercase text-gray-700">
+              <div className="col-span-6">Product</div>
+              <div className="col-span-2 text-center">Qty</div>
+              <div className="col-span-2 text-right">Price</div>
+              <div className="col-span-2 text-right">Total</div>
             </div>
             <div className="mt-2 space-y-1">
               {selectedPO.items?.map((item, idx) => (
-                <div key={item._id || idx} className="grid grid-cols-4 gap-2 p-2 border-b text-sm items-center">
-                  <div>{item.product?.name || 'N/A'}</div>
-                  <div className="text-center">{item.quantity}</div>
-                  <div className="text-right">{formatPKR(item.costPrice)}</div>
-                  <div className="text-right font-semibold">{formatPKR(item.quantity * item.costPrice)}</div>
+                <div key={item._id || idx} className="grid grid-cols-12 gap-2 p-3 border-b text-sm items-center hover:bg-gray-50">
+                  <div className="col-span-6 font-medium text-sm whitespace-normal break-words pr-2">
+                    {item.product?.name || 'N/A'}
+                  </div>
+                  <div className="col-span-2 text-center">{item.quantity}</div>
+                  <div className="col-span-2 text-right">{formatPKR(item.costPrice)}</div>
+                  <div className="col-span-2 text-right font-bold text-blue-800">{formatPKR(item.quantity * item.costPrice)}</div>
                 </div>
               ))}
             </div>
-            <div className="mt-4 border-t pt-4 text-right">
+            <div className="mt-6 border-t pt-4 text-right">
               <div className="text-xl font-black text-blue-900">Total Value: {formatPKR(selectedPO.totalAmount)}</div>
             </div>
           </div>

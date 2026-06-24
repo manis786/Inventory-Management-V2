@@ -10,12 +10,21 @@ export function AppProvider({ children }) {
   const [purchases, setPurchases] = useState([]);
   const [activeModule, setActiveModule] = useState('Dashboard');
   const [activeReport, setActiveReport] = useState(null);
+const [movements, setMovements] = useState([]);
+
+
 
   // --- Toast Notification Handler ---
   const addToast = (message, type = 'info') => {
-    // Aap yahan apni toast library (jaise react-toastify) use kar sakte hain
     console.log(`[${type.toUpperCase()}]: ${message}`);
     alert(message); 
+  };
+
+  // --- Helper to update local state (Global Sync) ---
+  const updateProductStock = (id, newStock) => {
+    setProducts(prevProducts => 
+      prevProducts.map(p => p._id === id ? { ...p, stock: newStock } : p)
+    );
   };
 
   // --- Purchases CRUD ---
@@ -31,29 +40,27 @@ export function AppProvider({ children }) {
 
   const addPurchaseOrder = async (poData) => {
     try {
-      console.log("Sending PO Data to Server:", poData);
       const res = await axios.post('http://localhost:5000/api/purchases', poData);
-      
       if(res.data) {
          await fetchPurchases(); 
          addToast('Purchase Order created successfully!', 'success');
       }
     } catch (err) {
       const errorMsg = err.response?.data?.message || err.message;
-      console.error("Add PO Error:", errorMsg);
       addToast(`Error: ${errorMsg}`, 'error');
     }
   };
 
   const receivePurchaseOrder = async (id) => {
-  try {
-    // API call karein jo status update kare
-    await axios.patch(`http://localhost:5000/api/purchases/${id}/receive`);
-    fetchPurchases(); // List update ho jayegi
-  } catch (err) {
-    console.error("Approval Error:", err);
-  }
-};
+    try {
+      await axios.patch(`http://localhost:5000/api/purchases/${id}/receive`);
+      fetchPurchases(); 
+    } catch (err) {
+      console.error("Approval Error:", err);
+      addToast('Failed to mark as received', 'error');
+    }
+  };
+
   // --- Products CRUD ---
   const fetchProducts = async () => {
     try {
@@ -96,6 +103,10 @@ export function AppProvider({ children }) {
     }
   };
 
+  const addMovement = (movement) => {
+  setMovements(prev => [movement, ...prev]);
+};
+
   useEffect(() => {
     fetchProducts();
     fetchCategories();
@@ -105,12 +116,13 @@ export function AppProvider({ children }) {
 
   return (
     <AppContext.Provider value={{
-      products, setProducts, fetchProducts,
+      products, setProducts, fetchProducts, updateProductStock,
       categories, setCategories, fetchCategories,
       suppliers, setSuppliers, fetchSuppliers, addSupplier,
       purchases, addPurchaseOrder, receivePurchaseOrder,
       activeModule, setActiveModule,
       activeReport, setActiveReport,
+      movements, setMovements, addMovement,
       addToast
     }}>
       {children}
