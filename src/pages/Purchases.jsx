@@ -38,32 +38,34 @@ export function Purchases() {
     setDraftProductId(''); setDraftQty(''); setDraftCost('');
   };
 
-  const handleApprovePO = async (po) => {
+const handleApprovePO = async (po) => {
     try {
+      // 1. Order Status Update
       await receivePurchaseOrder(po._id);
+      
       for (const item of po.items) {
+        // 2. Transaction Log (Audit Trail)
+        // Yahan hum naye transaction route ko hit kar rahe hain
+        await axios.post('http://localhost:5000/api/transactions', {
+          product: item.product?._id,
+          type: 'PURCHASE',
+          quantity: item.quantity,
+          refId: po.poNumber,
+          date: new Date().toISOString()
+        });
+
+        // 3. Local State Update (UI ke liye)
         const product = products.find(p => p._id === item.product?._id);
         if (product) {
           const newStock = Number(product.stock) + Number(item.quantity);
-          await axios.put(`http://localhost:5000/api/products/${product._id}`, { stock: newStock });
           setProducts(prev => prev.map(p => p._id === product._id ? { ...p, stock: newStock } : p));
-          
-          // Movement Logic ab loop ke andar hai aur sahi kaam karega
-          if (addMovement) {
-            addMovement({
-              type: 'PURCHASE',
-              productName: item.product?.name || item.name,
-              quantity: item.quantity,
-              date: new Date().toISOString(),
-              ref: po.poNumber
-            });
-          }
         }
       }
-      if (addToast) addToast('Order Approved & Stock Updated!', 'success');
+      
+      if (addToast) addToast('Order Approved & Transaction Logged!', 'success');
     } catch (err) {
       console.error("Approval Error:", err);
-      if (addToast) addToast('Failed to update stock', 'error');
+      if (addToast) addToast('Failed to log transaction', 'error');
     }
   };
 
