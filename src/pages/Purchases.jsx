@@ -38,11 +38,11 @@ export function Purchases() {
     setDraftProductId(''); setDraftQty(''); setDraftCost('');
   };
 
-const handleApprovePO = async (po) => {
+  const handleApprovePO = async (po) => {
     try {
       // 1. Order Status Update
       await receivePurchaseOrder(po._id);
-      
+
       for (const item of po.items) {
         // 2. Transaction Log (Audit Trail)
         // Yahan hum naye transaction route ko hit kar rahe hain
@@ -50,8 +50,11 @@ const handleApprovePO = async (po) => {
           product: item.product?._id,
           type: 'PURCHASE',
           quantity: item.quantity,
+          price: item.costPrice, // Yeh field add karein
+          totalAmount: item.quantity * item.costPrice, // Yeh field add karein
           refId: po.poNumber,
-          date: new Date().toISOString()
+          purchaseId: po._id, // Relation ke liye zaroori hai
+          supplier: po.supplier?._id
         });
 
         // 3. Local State Update (UI ke liye)
@@ -61,7 +64,7 @@ const handleApprovePO = async (po) => {
           setProducts(prev => prev.map(p => p._id === product._id ? { ...p, stock: newStock } : p));
         }
       }
-      
+
       if (addToast) addToast('Order Approved & Transaction Logged!', 'success');
     } catch (err) {
       console.error("Approval Error:", err);
