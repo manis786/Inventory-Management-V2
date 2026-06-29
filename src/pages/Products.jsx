@@ -19,6 +19,8 @@ export default function Products() {
 
   const [formData, setFormData] = useState(defaultForm);
 
+  
+
   useEffect(() => {
     if (typeof fetchProducts === 'function') fetchProducts();
   }, []);
@@ -29,7 +31,7 @@ export default function Products() {
     try {
       if (editingProduct) {
         // Update
-        console.log("Payload bheja ja raha hai:", formData);
+        // console.log("Payload bheja ja raha hai:", formData);
         await axios.put(`http://localhost:5000/api/products/${editingProduct._id}`, formData);
       } else {
         // Add
@@ -87,6 +89,10 @@ const openModal = (product = null) => {
     p.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     p.barcode?.toLowerCase().includes(searchQuery.toLowerCase())
   ) : [];
+const getCategoryName = (catId) => {
+  const category = categories.find(c => c._id === catId);
+  return category ? category.name : "Uncategorized";}
+
 
   return (
     <div className="p-6 space-y-6">
@@ -94,6 +100,9 @@ const openModal = (product = null) => {
         <h1 className="text-2xl font-black text-slate-800">Manage Products</h1>
         <Button onClick={() => openModal()}>+ Add New Product</Button>
       </div>
+      
+
+      
 
       {/* Search Bar */}
       <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
@@ -120,24 +129,32 @@ const openModal = (product = null) => {
             </tr>
           </thead>
           <tbody>
-            {filteredProducts.map((p) => (
-              <tr key={p._id} className="border-b border-slate-100 hover:bg-slate-50">
-                <td className="p-4 text-sm">{p.id}</td>
-                <td className="p-4 text-sm font-medium">{p.name}</td>
-                <td className="p-4 text-sm">{p.brand || '-'}</td>
-                <td className="p-4 text-sm italic">
-                  {/* Category Name Mapping */}
-                  {categories.find(c => c._id === p.category)?.name || 
-                    <span className="text-gray-400">Uncategorized</span>}
-                </td>
-                <td className="p-4 text-sm">{p.salePrice}</td>
-                <td className="p-4 text-sm space-x-2">
-                  <Button onClick={() => openModal(p)} className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1 text-sm">Edit</Button>
-                  <Button onClick={() => handleDelete(p._id)} className="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1 text-sm">Delete</Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
+  {filteredProducts.map((p) => {
+    // 1. Category ka naam nikalne ka simple tarika
+    // Agar p.category object hai toh uska ID lo, warna string ID use karo
+const productCatId = typeof p.category === 'object' ? p.category?._id : p.category;    
+    // 2. Categories list mein se naam dhoondo
+const foundCategory = categories.find(c => String(c._id) === String(productCatId));
+  return (
+    <tr key={p._id} className="border-b border-slate-100 hover:bg-slate-50">
+      <td className="p-4 text-sm">{p.id}</td>
+      <td className="p-4 text-sm font-medium">{p.name}</td>
+      <td className="p-4 text-sm">{p.brand || '-'}</td>
+      
+      {/* Yahan fix apply ho raha hai */}
+      <td className="p-4 text-sm font-semibold text-blue-600">
+        {foundCategory ? foundCategory.name : "Uncategorized"}
+      </td>
+
+      <td className="p-4 text-sm">{p.salePrice}</td>
+      <td className="p-4 text-sm space-x-2">
+        <Button onClick={() => openModal(p)} className="bg-blue-50 text-blue-600 px-3 py-1 text-sm">Edit</Button>
+        <Button onClick={() => handleDelete(p._id)} className="bg-red-50 text-red-600 px-3 py-1 text-sm">Delete</Button>
+      </td>
+    </tr>
+  );
+  })}
+</tbody>
         </table>
       </div>
 
