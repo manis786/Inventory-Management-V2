@@ -32,7 +32,7 @@ const isAuthenticated = !!localStorage.getItem('token');
     localStorage.removeItem('token');
     localStorage.removeItem('isLoggedIn');
     navigate('/login');
-    window.location.reload()
+   
   };
 
   // 3. Agar user logged in nahi hai, to seedha Login page dikhayein

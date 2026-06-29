@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext'; // Ensure path is correct
 import { CommandPalette } from '../ui/CommandPalette';
 import { DropdownMenu } from '../ui/DropdownMenu';
 import { Breadcrumb } from './Breadcrumb';
+import { useNavigate } from 'react-router-dom';
 import {
   Bell, Sun, Moon, Menu, User, LogOut,
   ShieldCheck, ShieldAlert
@@ -19,7 +20,7 @@ export function TopNav() {
     currentUser,
     addToast
   } = useApp(); // Ab ye AppContext se directly link ho gaya
-
+const navigate = useNavigate();
   const [notifOpen, setNotifOpen] = useState(false);
   const notifRef = useRef(null);
 
