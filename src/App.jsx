@@ -1,6 +1,7 @@
 import React from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import AppShell from './components/layout/AppShell';
+import { useNavigate } from 'react-router-dom'
 
 // Import Pages
 import Dashboard from './pages/Dashboard';
@@ -25,12 +26,13 @@ function ERPContent() {
   const { activeModule, currentUser } = useApp();
 
   // 1. Frontend Auth Check
-  const isAuthenticated = localStorage.getItem('isLoggedIn') === 'true';
-
+const isAuthenticated = !!localStorage.getItem('token');
   // 2. Standard Logout Handler
   const handleLogout = () => {
+    localStorage.removeItem('token');
     localStorage.removeItem('isLoggedIn');
-    window.location.reload(); // State refresh karke login block active karne ke liye
+    navigate('/login');
+    window.location.reload()
   };
 
   // 3. Agar user logged in nahi hai, to seedha Login page dikhayein

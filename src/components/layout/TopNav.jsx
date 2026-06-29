@@ -37,10 +37,11 @@ export function TopNav() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('isLoggedIn');
-    addToast('Logging out... Goodbye!', 'info');
+   localStorage.removeItem('token');
+  localStorage.removeItem('isLoggedIn');
     setTimeout(() => {
-      window.location.reload();
+      navigate('/login'); 
+    window.location.reload()
     }, 500);
   };
 

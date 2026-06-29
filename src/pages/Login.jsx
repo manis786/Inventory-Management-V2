@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { Button } from '../components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { Lock, Mail, Eye, EyeOff, Building2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export function Login() {
   const { login, addToast } = useApp();
@@ -10,16 +11,17 @@ export function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
+const navigate = useNavigate()
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
     const success = await login(email, password);
     if (success) {
-      window.location.reload();
+      navigate('/dashboard'); // Yahan redirect karo, refresh mat karo!
     } else {
       setIsLoading(false);
+      addToast("Login failed, credentials check karein", "error");
     }
   };
 

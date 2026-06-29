@@ -13,6 +13,9 @@ export function AppProvider({ children }) {
   const [activeModule, setActiveModule] = useState('Dashboard');
   const [activeReport, setActiveReport] = useState(null);
   const [movements, setMovements] = useState([]);
+  const [user, setUser] = useState(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
 
   // --- Cart States (POS) ---
   const [cart, setCart] = useState([]);
@@ -24,7 +27,7 @@ export function AppProvider({ children }) {
   // --- Helper: Toast Notification ---
   const addToast = (message, type = 'info') => {
     console.log(`[${type.toUpperCase()}]: ${message}`);
-    alert(message); 
+    alert(message);
   };
 
   // --- Cart Management ---
@@ -32,8 +35,8 @@ export function AppProvider({ children }) {
     setCart(prev => {
       const existing = prev.find(item => item.product._id === product._id);
       if (existing) {
-        return prev.map(item => item.product._id === product._id 
-          ? { ...item, quantity: item.quantity + 1, total: (item.quantity + 1) * item.product.salePrice } 
+        return prev.map(item => item.product._id === product._id
+          ? { ...item, quantity: item.quantity + 1, total: (item.quantity + 1) * item.product.salePrice }
           : item);
       }
       return [...prev, { product, quantity: 1, total: product.salePrice }];
@@ -41,11 +44,11 @@ export function AppProvider({ children }) {
   };
 
   const removeFromCart = (id) => setCart(prev => prev.filter(item => item.product._id !== id));
-  
+
   const updateCartQty = (id, qty) => {
     if (qty <= 0) return removeFromCart(id);
-    setCart(prev => prev.map(item => item.product._id === id 
-      ? { ...item, quantity: qty, total: qty * item.product.salePrice } 
+    setCart(prev => prev.map(item => item.product._id === id
+      ? { ...item, quantity: qty, total: qty * item.product.salePrice }
       : item));
   };
 
@@ -111,7 +114,7 @@ export function AppProvider({ children }) {
   const receivePurchaseOrder = async (id) => {
     try {
       await axios.patch(`http://localhost:5000/api/purchases/${id}/receive`);
-      fetchPurchases(); 
+      fetchPurchases();
       fetchProducts(); // Stock update hone ke baad products refresh
     } catch (err) { addToast('Failed to receive', 'error'); }
   };
@@ -119,6 +122,34 @@ export function AppProvider({ children }) {
   const updateProductStock = (id, newStock) => {
     setProducts(prev => prev.map(p => p._id === id ? { ...p, stock: newStock } : p));
   };
+
+const login = async (email, password) => {
+    try {
+      const response = await axios.post(`http://localhost:5000/api/auth/login`, {
+        email,
+        password
+      });
+
+      if (response.data && response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('isLoggedIn', 'true');
+        setIsAuthenticated(true);
+        return true; 
+      }
+      return false;
+    } catch (error) {
+      console.error("Login Error:", error.response?.data?.message);
+      alert(error.response?.data?.message || "Login Failed");
+      return false;
+    }
+  }
+
+const logout = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('isLoggedIn');
+  setIsAuthenticated(false);
+  setUser(null);
+};
 
   const addMovement = (movement) => setMovements(prev => [movement, ...prev]);
 
@@ -146,7 +177,9 @@ export function AppProvider({ children }) {
       cartPaymentMethod, setCartPaymentMethod,
       cartDiscount, setCartDiscount,
       cartTaxPercent, setCartTaxPercent,
-      addToast
+      addToast,
+      login,
+      logout
     }}>
       {children}
     </AppContext.Provider>
