@@ -165,44 +165,97 @@ const buildForecastData = () => {
 
 // ─── Dashboard Component ──────────────────────────────────────────────────────
 export function Dashboard() {
-  const products = PRODUCTS;
-  const customers = CUSTOMERS;
-  const suppliers = SUPPLIERS;
-  const purchases = PURCHASE_ORDERS;
-
+  // 1. SAARE HOOKS (STATES) TOP PAR
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [activeTab, setActiveTab] = useState('revenue');
 
+  // 2. FETCH DATA EFFECT
+  useEffect(() => {
+    const getDashboardData = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/dashboard/summary'); 
+        const data = await res.json();
+        setDashboardData(data);
+        setLoading(false);
+      } catch (err) {
+        console.error("Dashboard fetch error:", err);
+        setLoading(false);
+      }
+    };
+    getDashboardData();
+  }, []);
+
+  // 3. TIME INTERVAL EFFECT
   useEffect(() => {
     const t = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
 
-  // ── Derived KPIs ────────────────────────────────────────────────────────────
+  // 4. USE-MEMO KO 'IF (LOADING)' SE UPAR RAKH DIYA (RULES OF HOOKS SAFE)
   const kpis = useMemo(() => {
-    const curMonth = MONTHLY_ANALYTICS[MONTHLY_ANALYTICS.length - 1];
-    const prevMonth = MONTHLY_ANALYTICS[MONTHLY_ANALYTICS.length - 2];
+    // Agar data abhi tak nahi aaya (loading chal rahi hai), toh dummy data return karo taake crash na ho
+    if (!dashboardData) {
+      return {
+        curMonth: { revenue: 0, profit: 0, expenses: 0, transactions: 0 },
+        prevMonth: { revenue: 0, profit: 0, expenses: 0, transactions: 0 },
+        totalRevenue: 0, totalProfit: 0, totalExpenses: 0, totalTxns: 0,
+        lowStock: 0, outStock: 0, activeSuppliers: 0, pendingPOs: 0,
+        activeCustomers: 0, totalPayable: 0, totalReceivable: 0, grossMargin: '0'
+      };
+    }
 
+    // Jab data aa jaye, tab asli data se calculation karo
+    const { products, customers, suppliers } = dashboardData;
+    const purchases = PURCHASE_ORDERS;
+
+    const curMonth = MONTHLY_ANALYTICS[MONTHLY_ANALYTICS.length - 1] || { revenue: 0, profit: 0, expenses: 0, transactions: 0 };
+    const prevMonth = MONTHLY_ANALYTICS[MONTHLY_ANALYTICS.length - 2] || { revenue: 0, profit: 0, expenses: 0, transactions: 0 };
     const totalRevenue = MONTHLY_ANALYTICS.reduce((s, m) => s + m.revenue, 0);
     const totalProfit = MONTHLY_ANALYTICS.reduce((s, m) => s + m.profit, 0);
     const totalExpenses = MONTHLY_ANALYTICS.reduce((s, m) => s + m.expenses, 0);
     const totalTxns = MONTHLY_ANALYTICS.reduce((s, m) => s + m.transactions, 0);
 
-    const lowStock = products.filter(p => p.stock > 0 && p.stock <= (p.minStock || 10)).length;
-    const outStock = products.filter(p => p.stock === 0).length;
-    const activeSuppliers = suppliers.filter(s => s.status === 'active').length;
-    const pendingPOs = purchases.filter(p => p.status === 'Pending').length;
-    const activeCustomers = customers.filter(c => c.status === 'active').length;
-    const totalPayable = suppliers.reduce((s, sup) => s + (sup.balance || 0), 0);
-    const totalReceivable = customers.reduce((s, c) => s + (c.balance || 0), 0);
-    const grossMargin = totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : '0';
-
     return {
-      curMonth, prevMonth, totalRevenue, totalProfit, totalExpenses,
-      totalTxns, lowStock, outStock, activeSuppliers, pendingPOs,
-      activeCustomers, totalPayable, totalReceivable, grossMargin
+      curMonth, prevMonth, totalRevenue, totalProfit, totalExpenses, totalTxns,
+      lowStock: products ? products.filter(p => p.stock > 0 && p.stock <= (p.minStock || 10)).length : 0,
+      outStock: products ? products.filter(p => p.stock === 0).length : 0,
+      activeSuppliers: suppliers ? suppliers.filter(s => s.status === 'active').length : 0,
+      pendingPOs: purchases ? purchases.filter(p => p.status === 'Pending').length : 0,
+      activeCustomers: customers ? customers.filter(c => c.status === 'active').length : 0,
+      totalPayable: suppliers ? suppliers.reduce((s, sup) => s + (sup.balance || 0), 0) : 0,
+      totalReceivable: customers ? customers.reduce((s, c) => s + (c.balance || 0), 0) : 0,
+      grossMargin: totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : '0'
     };
-  }, [products, customers, suppliers, purchases]);
+  }, [dashboardData]); // Dependency sirf dashboardData rahegi
+
+  // 5. AB SAARE HOOKS KHATAM HONE KE BAAD LOADING CHECK LAGAYEIN
+  // if (loading) return <div className="p-20 text-center text-slate-500 font-bold">Loading Matrix ERP...</div>;
+if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] w-full gap-4">
+        {/* Animated Spinner Wheel */}
+        <div className="relative w-12 h-12">
+          <div className="absolute inset-0 border-4 border-slate-200 dark:border-slate-800 rounded-full"></div>
+          <div className="absolute inset-0 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+        {/* Loading Text with Fade Effect */}
+        <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 animate-pulse tracking-wide">
+          Loading Dashboard Data
+        </p>
+      </div>
+    );
+  }
+  if (!dashboardData) return <div className="p-20 text-center text-rose-500">Data not found</div>;
+
+  // 6. SAFE DESTRUCTURING FOR UI (Kyunke loading khatam ho chuki hai)
+  const { products, customers, suppliers } = dashboardData;
+  const purchases = PURCHASE_ORDERS;
+
+ 
+  // ── Derived KPIs ────────────────────────────────────────────────────────────
+
 
   const forecastData = buildForecastData();
 
