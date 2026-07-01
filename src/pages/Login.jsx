@@ -18,10 +18,11 @@ const navigate = useNavigate()
 
     const success = await login(email, password);
     if (success) {
-      navigate('/dashboard'); // Yahan redirect karo, refresh mat karo!
+      navigate('/dashboard'); 
     } else {
       setIsLoading(false);
-      addToast("Login failed, credentials check karein", "error");
+      console.log("Adding toast...");
+      addToast("Login failed, Please Check your credentials", "error");
     }
   };
 
@@ -33,10 +34,10 @@ const navigate = useNavigate()
             <Building2 className="w-6 h-6" />
           </div>
           <CardTitle className="text-xl md:text-2xl font-black text-slate-800 dark:text-white tracking-tight text-center">
-            Supermart Operations Center
+            Smart Mart Opreational Manager
           </CardTitle>
           <p className="text-xs font-medium text-slate-400 dark:text-slate-500 mt-1.5 text-center">
-            Sign in to access Karachi HQ & Lahore Branch ERP records
+            Sign in to Your ERP
           </p>
         </CardHeader>
 
@@ -112,10 +113,10 @@ const navigate = useNavigate()
           </form>
 
           {/* Dummy Credentials Alert Box */}
-          <div className="mt-6 p-3 bg-slate-100/60 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-lg text-[11px] text-slate-400 dark:text-slate-500 text-center">
+          {/* <div className="mt-6 p-3 bg-slate-100/60 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-lg text-[11px] text-slate-400 dark:text-slate-500 text-center">
             <span className="font-bold text-slate-500 dark:text-slate-400">Demo User: </span>
             admin@supermart.com | <span className="font-bold text-slate-500 dark:text-slate-400">Pass: </span>admin123
-          </div>
+          </div> */}
         </CardContent>
       </Card>
     </div>

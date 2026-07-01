@@ -2,10 +2,11 @@ import React from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import AppShell from './components/layout/AppShell';
 import { useNavigate } from 'react-router-dom'
-
+import { Toaster } from 'react-hot-toast';
 // Import Pages
 import Dashboard from './pages/Dashboard';
 import POSSales from './pages/POSSales';
+import CreditSales from './pages/CreditSales'
 import Products from './pages/Products';
 import Categories from './pages/Categories';
 import Inventory from './pages/Inventory';
@@ -21,6 +22,7 @@ import Settings from './pages/Settings';
 
 // Login Page Import
 import Login from './pages/Login';
+
 
 function ERPContent() {
   const { activeModule, currentUser } = useApp();
@@ -47,6 +49,8 @@ const isAuthenticated = !!localStorage.getItem('token');
         return <Dashboard />;
       case 'POS Sales':
         return <POSSales />;
+        case 'Credit Sales': 
+        return <CreditSales />;
       case 'Products':
         return <Products />;
       case 'Categories':
@@ -93,6 +97,7 @@ const isAuthenticated = !!localStorage.getItem('token');
 function App() {
   return (
     <AppProvider>
+      <Toaster position="top-right" />
       <ERPContent />
     </AppProvider>
   );

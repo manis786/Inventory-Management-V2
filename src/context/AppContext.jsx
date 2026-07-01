@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const AppContext = createContext();
 
@@ -15,6 +16,7 @@ export function AppProvider({ children }) {
   const [movements, setMovements] = useState([]);
   const [user, setUser] = useState(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [toasts, setToasts] = useState([]);
 
 
   // --- Cart States (POS) ---
@@ -26,9 +28,14 @@ export function AppProvider({ children }) {
 
   // --- Helper: Toast Notification ---
   const addToast = (message, type = 'info') => {
-    console.log(`[${type.toUpperCase()}]: ${message}`);
-    alert(message);
-  };
+  if (type === 'error') {
+    toast.error(message);
+  } else if (type === 'success') {
+    toast.success(message);
+  } else {
+    toast(message);
+  }
+};
 
   // --- Cart Management ---
   const addToCart = (product) => {
@@ -139,7 +146,7 @@ const login = async (email, password) => {
       return false;
     } catch (error) {
       console.error("Login Error:", error.response?.data?.message);
-      alert(error.response?.data?.message || "Login Failed");
+      
       return false;
     }
   }

@@ -32,6 +32,7 @@ export function Sidebar() {
       items: [
         { name: 'Dashboard', icon: LayoutDashboard },
         { name: 'POS Sales', icon: Calculator },
+        { name: 'Credit Sales', icon: FileSpreadsheet },
         { name: 'Products', icon: ShoppingBag },
         { name: 'Categories', icon: Layers }, // Naya Add kiya
         { name: 'Inventory', icon: Warehouse },
