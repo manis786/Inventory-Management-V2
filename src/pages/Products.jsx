@@ -11,6 +11,11 @@ export default function Products() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
+
+  // Pagination 
+const [currentPage, setCurrentPage] = useState(1);
+const [itemsPerPage] = useState(10);
+  
   // Form structure jo aapke MongoDB schema se match karta hai
   const defaultForm = {
     id: '', name: '', brand: '', category: '',
@@ -129,7 +134,9 @@ const getCategoryName = (catId) => {
             </tr>
           </thead>
           <tbody>
-  {filteredProducts.map((p) => {
+  {filteredProducts
+  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+  .map((p) => {
     // 1. Category ka naam nikalne ka simple tarika
     // Agar p.category object hai toh uska ID lo, warna string ID use karo
 const productCatId = typeof p.category === 'object' ? p.category?._id : p.category;    
@@ -157,6 +164,53 @@ const foundCategory = categories.find(c => String(c._id) === String(productCatId
 </tbody>
         </table>
       </div>
+ <div className="flex justify-center items-center gap-2 mt-8 pb-8">
+  {/* Prev Button */}
+  <button
+    disabled={currentPage === 1}
+    onClick={() => setCurrentPage(prev => prev - 1)}
+    className="w-10 h-10 border border-slate-300 rounded flex items-center justify-center hover:bg-slate-50 disabled:opacity-50"
+  > &lt; </button>
+
+  {(() => {
+    const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+    const pageNumbers = [];
+    
+    for (let i = 1; i <= totalPages; i++) {
+      // Logic: 1, ..., current-2, current-1, current, current+1, current+2, ..., last
+      if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+        pageNumbers.push(i);
+      } else if (i === currentPage - 3 || i === currentPage + 3) {
+        pageNumbers.push('...');
+      }
+    }
+
+    return pageNumbers.map((p, idx) => (
+      p === '...' ? (
+        <span key={idx} className="px-2 text-slate-400">...</span>
+      ) : (
+        <button
+          key={idx}
+          onClick={() => setCurrentPage(p)}
+          className={`w-10 h-10 border rounded transition-all ${
+            currentPage === p 
+              ? 'bg-[#17a2b8] text-white border-[#17a2b8]' 
+              : 'bg-white text-slate-600 border-slate-300 hover:border-[#17a2b8]'
+          }`}
+        >
+          {p}
+        </button>
+      )
+    ));
+  })()}
+
+  {/* Next Button */}
+  <button
+    disabled={currentPage === Math.ceil(filteredProducts.length / itemsPerPage)}
+    onClick={() => setCurrentPage(prev => prev + 1)}
+    className="w-10 h-10 border border-slate-300 rounded flex items-center justify-center hover:bg-slate-50 disabled:opacity-50"
+  > &gt; </button>
+</div>
 
       {/* Product Add/Edit Modal */}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={editingProduct ? "Edit Product" : "Add New Product"} size="lg">

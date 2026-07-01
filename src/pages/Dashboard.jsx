@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { formatPKR } from '../data/store';
-import { PRODUCTS } from '../data/products';
-import { CUSTOMERS } from '../data/customers';
-import { SUPPLIERS } from '../data/suppliers';
-import { PURCHASE_ORDERS } from '../data/purchases';
+// import { PRODUCTS } from '../data/products';
+// import { CUSTOMERS } from '../data/customers';
+// import { SUPPLIERS } from '../data/suppliers';
+// import { PURCHASE_ORDERS } from '../data/purchases';
 import {
   MONTHLY_ANALYTICS,
   WEEKLY_SALES,
@@ -193,6 +193,8 @@ export function Dashboard() {
     return () => clearInterval(t);
   }, []);
 
+  // console.log("Total Orders Check:", PURCHASE_ORDERS.length);
+// console.log("Pending Orders Filter:", PURCHASE_ORDERS.filter(p => p.status === 'Pending'));
   // 4. USE-MEMO KO 'IF (LOADING)' SE UPAR RAKH DIYA (RULES OF HOOKS SAFE)
   const kpis = useMemo(() => {
     // Agar data abhi tak nahi aaya (loading chal rahi hai), toh dummy data return karo taake crash na ho
@@ -207,8 +209,7 @@ export function Dashboard() {
     }
 
     // Jab data aa jaye, tab asli data se calculation karo
-    const { products, customers, suppliers } = dashboardData;
-    const purchases = PURCHASE_ORDERS;
+    const { products, customers, suppliers, purchases } = dashboardData;
 
     const curMonth = MONTHLY_ANALYTICS[MONTHLY_ANALYTICS.length - 1] || { revenue: 0, profit: 0, expenses: 0, transactions: 0 };
     const prevMonth = MONTHLY_ANALYTICS[MONTHLY_ANALYTICS.length - 2] || { revenue: 0, profit: 0, expenses: 0, transactions: 0 };
@@ -222,8 +223,7 @@ export function Dashboard() {
       lowStock: products ? products.filter(p => p.stock > 0 && p.stock <= (p.minStock || 10)).length : 0,
       outStock: products ? products.filter(p => p.stock === 0).length : 0,
       activeSuppliers: suppliers ? suppliers.filter(s => s.status === 'active').length : 0,
-      pendingPOs: purchases ? purchases.filter(p => p.status === 'Pending').length : 0,
-      activeCustomers: customers ? customers.filter(c => c.status === 'active').length : 0,
+pendingPOs: purchases ? purchases.filter(p => p.status?.toLowerCase() === 'pending').length : 0,      activeCustomers: customers ? customers.filter(c => c.status === 'active').length : 0,
       totalPayable: suppliers ? suppliers.reduce((s, sup) => s + (sup.balance || 0), 0) : 0,
       totalReceivable: customers ? customers.reduce((s, c) => s + (c.balance || 0), 0) : 0,
       grossMargin: totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : '0'
@@ -251,8 +251,7 @@ if (loading) {
 
   // 6. SAFE DESTRUCTURING FOR UI (Kyunke loading khatam ho chuki hai)
   const { products, customers, suppliers } = dashboardData;
-  const purchases = PURCHASE_ORDERS;
-
+const purchases = dashboardData.purchases || [];
  
   // ── Derived KPIs ────────────────────────────────────────────────────────────
 
@@ -388,16 +387,16 @@ if (loading) {
         />
         <MetricCard
           title="Receivables"
-          value={`Rs ${fmtK(kpis.totalReceivable)}`}
-          sub={`${customers.filter(c => c.balance > 0).length} active khata`}
+          value={`${formatPKR(kpis.totalReceivable)}`}
+          sub={`${customers.filter(c => c.balance > 0).length} active debtors`}
           icon={CreditCard}
           color="amber"
           trend={-2.4}
         />
         <MetricCard
           title="Payables"
-          value={`Rs ${fmtK(kpis.totalPayable)}`}
-          sub={`${kpis.pendingPOs} pending orders`}
+          value={`${formatPKR(kpis.totalPayable)}`}
+          sub={kpis.pendingPOs > 0 ? `${kpis.pendingPOs} pending orders` : 'No pending orders'}
           icon={Truck}
           color="violet"
           trend={-5.1}
