@@ -17,6 +17,7 @@ export function AppProvider({ children }) {
   const [user, setUser] = useState(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [toasts, setToasts] = useState([]);
+  const [sales, setSales] = useState([]);
 
 
   // --- Cart States (POS) ---
@@ -102,6 +103,23 @@ export function AppProvider({ children }) {
       setCustomers(Array.isArray(res.data) ? res.data : (res.data.data || []));
     } catch (err) { console.error("Fetch Customers Error:", err); }
   };
+  const fetchSales = async () => {
+  try {
+    const res = await axios.get('http://localhost:5000/api/sales');
+    setSales(Array.isArray(res.data) ? res.data : (res.data.data || []));
+  } catch (err) { console.error("Fetch Sales Error:", err); }
+};
+
+const addSale = async (saleData) => {
+  try {
+    await axios.post('http://localhost:5000/api/sales', saleData);
+    fetchSales(); // Data refresh karne ke liye
+    addToast('Invoice Posted Successfully!', 'success');
+  } catch (err) { 
+    addToast(`Error: ${err.message}`, 'error'); 
+  }
+};
+
 
   const addSupplier = async (supplierData) => {
     try {
@@ -167,6 +185,7 @@ const logout = () => {
     fetchSuppliers();
     fetchPurchases();
     fetchCustomers();
+    fetchSales();
   }, []);
 
   return (
@@ -186,6 +205,7 @@ const logout = () => {
       cartTaxPercent, setCartTaxPercent,
       addToast,
       login,
+      sales, setSales, addSale, fetchSales,
       logout
     }}>
       {children}
