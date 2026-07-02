@@ -113,7 +113,7 @@ export function AppProvider({ children }) {
 const addSale = async (saleData) => {
   try {
     await axios.post('http://localhost:5000/api/sales', saleData);
-    fetchSales(); // Data refresh karne ke liye
+    await fetchSales(); // Data refresh karne ke liye
     addToast('Invoice Posted Successfully!', 'success');
   } catch (err) { 
     addToast(`Error: ${err.message}`, 'error'); 
@@ -178,6 +178,17 @@ const logout = () => {
 
   const addMovement = (movement) => setMovements(prev => [movement, ...prev]);
 
+  const updateSaleStatus = async (id, status) => {
+  try {
+    await axios.put(`http://localhost:5000/api/sales/${id}`, { status });
+    // State refresh karne ke liye fetchSales call karo
+    await fetchSales(); 
+  } catch (error) {
+    console.error("Context Error:", error);
+    throw error; // Yeh error handleApprove ko wapis bhejega
+  }
+};
+
   // Initial Data Fetch
   useEffect(() => {
     fetchProducts();
@@ -197,6 +208,7 @@ const logout = () => {
       customers, fetchCustomers,
       activeModule, setActiveModule,
       activeReport, setActiveReport,
+      updateSaleStatus,
       movements, setMovements, addMovement,
       cart, addToCart, removeFromCart, updateCartQty, clearCart,
       cartCustomer, setCartCustomer,

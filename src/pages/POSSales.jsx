@@ -95,6 +95,7 @@ export function POSSales() {
       discount: discountAmount,
       tax: taxedAmount,
       grandTotal: grandTotal,
+      type: 'pos',
       paymentMethod: cartPaymentMethod || 'Cash'
     };
 
