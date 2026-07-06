@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { Button } from '../components/ui/Button';
-import { X, Trash2, Plus, CheckCircle, Eye } from 'lucide-react';
+import { X, Trash2, Plus, CheckCircle } from 'lucide-react';
 
 // 1. Searchable Select Component
 const SearchableSelect = ({ options, placeholder, onSelect, selectedId, showQty }) => {
@@ -9,7 +9,7 @@ const SearchableSelect = ({ options, placeholder, onSelect, selectedId, showQty 
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const filtered = options?.filter(o => o.name?.toLowerCase().includes(query.toLowerCase()));
-
+  
 
   const handleKeyDown = (e) => {
     if (!isOpen) { setIsOpen(true); return; }
@@ -173,25 +173,22 @@ export default function CreditSales() {
   const { sales, updateSaleStatus, customers, fetchSales } = useApp();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
-  const [selectedSale, setSelectedSale] = useState(null)
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-
   const handleStatusChange = async (saleId, newStatus) => {
-    if (!window.confirm(`Kya aap yaqeenan status "${newStatus}" par change karna chahte hain?`)) return;
-
-    setIsApproving(true);
-    try {
-      // Backend API ko naya status bhej rahe hain
-      await updateSaleStatus(saleId, newStatus);
-      await fetchSales(); // UI refresh karne ke liye
-      alert(`Status successfully updated to ${newStatus}`);
-    } catch (error) {
-      console.error("Error updating status:", error);
-      alert("Status update failed!");
-    } finally {
-      setIsApproving(false);
-    }
-  };
+  if (!window.confirm(`Kya aap yaqeenan status "${newStatus}" par change karna chahte hain?`)) return;
+  
+  setIsApproving(true);
+  try {
+    // Backend API ko naya status bhej rahe hain
+    await updateSaleStatus(saleId, newStatus); 
+    await fetchSales(); // UI refresh karne ke liye
+    alert(`Status successfully updated to ${newStatus}`);
+  } catch (error) {
+    console.error("Error updating status:", error);
+    alert("Status update failed!");
+  } finally {
+    setIsApproving(false);
+  }
+};
 
   const handleApprove = async (saleId) => {
     if (!window.confirm("Kya aap yaqeenan is invoice ko approve aur paid mark karna chahte hain?")) return;
@@ -210,50 +207,68 @@ export default function CreditSales() {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
-      <table className="w-full text-left text-sm">
-        <thead className="bg-slate-900 text-white uppercase text-[10px] tracking-widest font-bold">
-          <tr>
-            <th className="p-4">Invoice #</th>
-            <th className="p-4">Customer</th>
-            <th className="p-4">Date</th>
-            <th className="p-4">Amount</th>
-            <th className="p-4">Status</th>
-            <th className="p-4">Action</th>
-            <th className="p-4">Details</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100">
-          {sales?.filter(s => s.type === 'credit').map((s) => (
-            <tr key={s._id} className="hover:bg-indigo-50/50">
-              <td className="p-4 font-mono font-bold text-indigo-600">{s.invoiceNumber || s.invoiceNo}</td>
-              <td className="p-4 font-medium">{customers?.find(c => c._id === s.customerId || c._id === s.customer)?.name || 'Walk-in'}</td>
-              <td className="p-4 text-slate-500">{new Date(s.date).toLocaleDateString('en-PK')}</td>
-              <td className="p-4 font-bold">Rs. {s.grandTotal?.toLocaleString()}</td>
-              <td className="p-4">
-                <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${s.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                  {s.status}
-                </span>
-              </td>
-              <td className="p-4">
-                <select value={s.status} onChange={(e) => updateSaleStatus(s._id, e.target.value)} className="text-[10px] p-1 border rounded cursor-pointer">
-                  <option value="pending">Pending</option>
-                  <option value="approved">Approve</option>
-                  <option value="rejected">Reject</option>
-                </select>
-              </td>
-              <td className="p-4">
-                <Button variant="ghost" size="sm" onClick={() => {
-                  setSelectedSale(s);
-                  setIsDetailModalOpen(true);
-                }}>
-                  <Eye size={16} />
-                </Button>
-              </td>
+    <div className="p-8 bg-slate-50 min-h-screen">
+      <div className="flex justify-between mb-6">
+        <h1 className="text-xl font-black">Credit Sales Ledger</h1>
+        <Button onClick={() => setIsModalOpen(true)}>New Invoice</Button>
+      </div>
+      <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+        <table className="w-full text-left text-sm" style={{ tableLayout: 'fixed' }}>
+          <thead className="bg-slate-900 text-white uppercase text-[10px] tracking-widest font-bold">
+            <tr>
+              <th className="p-4" style={{ width: '15%' }}>Invoice #</th>
+              <th className="p-4" style={{ width: '25%' }}>Customer</th>
+              <th className="p-4" style={{ width: '15%' }}>Date</th>
+              <th className="p-4" style={{ width: '15%' }}>Amount</th>
+              <th className="p-4" style={{ width: '15%' }}>Status</th>
+              <th className="p-4" style={{ width: '15%' }}>Action</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {sales?.filter(s => s.type === 'credit').map((s) => {
+              const customerObj = customers?.find(c => c._id === s.customerId || c._id === s.customer);
+              return (
+                <tr key={s._id} className="hover:bg-indigo-50/50 transition-colors duration-200">
+                  <td className="p-4 font-mono font-bold text-indigo-600 truncate">{s.invoiceNumber || s.invoiceNo}</td>
+                  <td className="p-4 font-medium text-slate-800">{customerObj?.name || 'Walk-in'}</td>
+                  <td className="p-4 text-slate-500 font-medium">
+                    {s.date ? new Date(s.date).toLocaleDateString('en-PK', { day: '2-digit', month: 'short', year: 'numeric' }) : 'No Date'}
+                  </td>
+                  <td className="p-4 font-bold text-slate-900">Rs. {s.grandTotal?.toLocaleString()}</td>
+                  <td className="p-4">
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${s.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                      {s.status || 'pending'}
+                    </span>
+                  </td>
+<td className="p-4">
+  <select
+    value={s.status || 'pending'}
+    onChange={(e) => handleStatusChange(s._id, e.target.value)}
+    disabled={isApproving}
+    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase border cursor-pointer outline-none transition-all ${
+      isApproving ? 'opacity-50 cursor-not-allowed' : ''
+    } ${
+      s.status === 'approved' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
+      s.status === 'rejected' ? 'bg-red-100 text-red-700 border-red-200' :
+      s.status === 'hold' ? 'bg-amber-100 text-amber-700 border-amber-200' :
+      s.status === 'void' ? 'bg-slate-200 text-slate-600 border-slate-300' :
+      'bg-indigo-50 text-indigo-700 border-indigo-200'
+    }`}
+  >
+    <option value="pending">Pending</option>
+    <option value="approved">Approve</option>
+    <option value="rejected">Reject</option>
+    <option value="hold">Hold</option>
+    <option value="void">Void</option>
+  </select>
+</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      {isModalOpen && <CreditSaleModal onClose={() => setIsModalOpen(false)} />}
     </div>
   );
 }
