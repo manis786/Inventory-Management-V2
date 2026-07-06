@@ -38,40 +38,68 @@ export function Purchases() {
     setDraftProductId(''); setDraftQty(''); setDraftCost('');
   };
 
-  const handleApprovePO = async (po) => {
-    try {
-      // 1. Order Status Update
-      await receivePurchaseOrder(po._id);
+  // const handleApprovePO = async (po) => {
+  //   try {
+  //     // 1. Order Status Update
+  //     await receivePurchaseOrder(po._id);
 
-      for (const item of po.items) {
-        // 2. Transaction Log (Audit Trail)
-        // Yahan hum naye transaction route ko hit kar rahe hain
-        await axios.post('http://localhost:5000/api/transactions', {
-          product: item.product?._id,
-          type: 'PURCHASE',
-          quantity: item.quantity,
-          price: item.costPrice, // Yeh field add karein
-          totalAmount: item.quantity * item.costPrice, // Yeh field add karein
-          refId: po.poNumber,
-          purchaseId: po._id, // Relation ke liye zaroori hai
-          supplier: po.supplier?._id
-        });
+  //     for (const item of po.items) {
+  //       // 2. Transaction Log (Audit Trail)
+  //       // Yahan hum naye transaction route ko hit kar rahe hain
+  //       await axios.post('http://localhost:5000/api/transactions', {
+  //         product: item.product?._id,
+  //         type: 'PURCHASE',
+  //         quantity: item.quantity,
+  //         price: item.costPrice, // Yeh field add karein
+  //         totalAmount: item.quantity * item.costPrice, // Yeh field add karein
+  //         refId: po.poNumber,
+  //         purchaseId: po._id, // Relation ke liye zaroori hai
+  //         supplier: po.supplier?._id
+  //       });
 
-        // 3. Local State Update (UI ke liye)
-        const product = products.find(p => p._id === item.product?._id);
-        if (product) {
-          const newStock = Number(product.stock) + Number(item.quantity);
-          setProducts(prev => prev.map(p => p._id === product._id ? { ...p, stock: newStock } : p));
-        }
-      }
+  //       // 3. Local State Update (UI ke liye)
+  //       const product = products.find(p => p._id === item.product?._id);
+  //       if (product) {
+  //         const newStock = Number(product.stock) + Number(item.quantity);
+  //         setProducts(prev => prev.map(p => p._id === product._id ? { ...p, stock: newStock } : p));
+  //       }
+  //     }
 
-      if (addToast) addToast('Order Approved & Transaction Logged!', 'success');
-    } catch (err) {
-      console.error("Approval Error:", err);
-      if (addToast) addToast('Failed to log transaction', 'error');
+  //     if (addToast) addToast('Order Approved & Transaction Logged!', 'success');
+  //   } catch (err) {
+  //     console.error("Approval Error:", err);
+  //     if (addToast) addToast('Failed to log transaction', 'error');
+  //   }
+  // };
+
+const handlePurchaseStatusChange = async (poId, newStatus) => {
+  if (!window.confirm(`Kya aap status "${newStatus}" karna chahte hain?`)) return;
+
+  try {
+    await axios.put(`http://localhost:5000/api/purchases/${poId}`, { status: newStatus });
+
+    if (typeof setPurchases === 'function') {
+      setPurchases(prev => prev.map(p => p._id === poId ? { ...p, status: newStatus } : p));
     }
-  };
 
+    if (addToast) addToast(`Status updated to ${newStatus}`, 'success');
+  } catch (err) {
+    console.error("Status Update Error:", err);
+    if (addToast) addToast('Failed to update status', 'error');
+  }
+};
+    
+const getStatusColor = (status) => {
+  switch (status?.toLowerCase()) {
+    case 'approved': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+    case 'rejected': return 'bg-red-100 text-red-700 border-red-200';
+    case 'hold': return 'bg-amber-100 text-amber-700 border-amber-200';
+    case 'void': return 'bg-slate-200 text-slate-600 border-slate-300';
+    default: return 'bg-indigo-50 text-indigo-700 border-indigo-200'; // Pending
+  }
+};
+    
+   
   const handleRemoveItem = (idx) => setPoItems(prev => prev.filter((_, i) => i !== idx));
 
   const handlePoSubmit = async (e) => {
@@ -87,24 +115,50 @@ export function Purchases() {
     setPoItems([]);
     setSelectedSupplierId('');
   };
+const columns = [
+  { key: 'poNumber', label: 'PO Code', render: (row) => <span className="bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded text-[10px]">{row.poNumber || `PO-${row._id?.slice(-5).toUpperCase()}`}</span> },
+  { key: 'date', label: 'Date', render: (row) => <span className="text-xs">{new Date(row.date).toLocaleDateString('en-GB')}</span> },
+  { key: 'supplierName', label: 'Supplier', render: (row) => <span className="text-xs truncate block max-w-[120px]">{row.supplier?.name || 'N/A'}</span> },
+  { key: 'totalAmount', label: 'Total', render: (row) => <span className="text-xs font-bold">{formatPKR(row.totalAmount)}</span> },
+  
+  // Status (Sirf Label)
+  { 
+    key: 'status', 
+    label: 'Status', 
+    render: (row) => <div className="scale-90 origin-left"><StatusBadge status={row.status || 'Pending'} /></div> 
+  },
 
+  // Action (Dropdown)
+  { 
+    key: 'action', 
+    label: 'Action', 
+    render: (row) => (
+      <select
+        value={row.status || 'Pending'}
+        onChange={(e) => handlePurchaseStatusChange(row._id, e.target.value)}
+        className={`px-2 py-1 rounded text-[9px] font-bold uppercase border cursor-pointer outline-none ${getStatusColor(row.status)}`}
+      >
+        <option value="Pending">Pending</option>
+        <option value="Approved">Approve</option>
+        <option value="Rejected">Reject</option>
+        <option value="Hold">Hold</option>
+        <option value="Void">Void</option>
+      </select>
+    ) 
+  },
+
+  // Eye (Aankh)
+  {
+    key: 'details', 
+    label: '', 
+    render: (row) => (
+      <Button variant="ghost" icon={Eye} onClick={() => handleOpenDetails(row)} size="sm" className="p-1" />
+    )
+  }
+];
   const handleOpenDetails = (po) => { setSelectedPO(po); setDetailModalOpen(true); };
 
-  const columns = [
-    { key: 'poNumber', label: 'PO Code', render: (row) => <span className="bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded text-[11px]">{row.poNumber || `PO-${row._id?.slice(-5).toUpperCase()}`}</span> },
-    { key: 'date', label: 'Order Date', render: (row) => new Date(row.date).toLocaleDateString('en-GB') },
-    { key: 'supplierName', label: 'Supplier', render: (row) => row.supplier?.name || 'N/A' },
-    { key: 'totalAmount', label: 'Total Value', render: (row) => formatPKR(row.totalAmount) },
-    { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
-    {
-      key: 'actions', label: 'Actions', render: (row) => (
-        <div className="flex gap-2">
-          <Button variant="ghost" icon={Eye} onClick={() => handleOpenDetails(row)} />
-          {row.status === 'Pending' && <Button variant="success" size="sm" onClick={() => handleApprovePO(row)}>Approve</Button>}
-        </div>
-      )
-    }
-  ];
+
 
   return (
     <div className="space-y-5">

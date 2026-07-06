@@ -173,19 +173,34 @@ export function Dashboard() {
 
   // 2. FETCH DATA EFFECT
   useEffect(() => {
-    const getDashboardData = async () => {
-      try {
-        const res = await fetch('http://localhost:5000/api/dashboard/summary'); 
-        const data = await res.json();
+  // Flag taake cleanup handle ho sake
+  let isMounted = true; 
+
+  const getDashboardData = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/dashboard/summary');
+      const data = await res.json();
+      
+      // Agar component abhi bhi mounted hai tabhi state update karein
+      if (isMounted) {
         setDashboardData(data);
         setLoading(false);
-      } catch (err) {
-        console.error("Dashboard fetch error:", err);
+      }
+    } catch (err) {
+      console.error("Dashboard fetch error:", err);
+      if (isMounted) {
         setLoading(false);
       }
-    };
-    getDashboardData();
-  }, []);
+    }
+  };
+
+  getDashboardData();
+
+  // Cleanup function
+  return () => {
+    isMounted = false;
+  };
+}, []); // Empty dependency array []
 
   // 3. TIME INTERVAL EFFECT
   useEffect(() => {
@@ -193,11 +208,10 @@ export function Dashboard() {
     return () => clearInterval(t);
   }, []);
 
-  // console.log("Total Orders Check:", PURCHASE_ORDERS.length);
-// console.log("Pending Orders Filter:", PURCHASE_ORDERS.filter(p => p.status === 'Pending'));
+  
   // 4. USE-MEMO KO 'IF (LOADING)' SE UPAR RAKH DIYA (RULES OF HOOKS SAFE)
-  const kpis = useMemo(() => {
-    // Agar data abhi tak nahi aaya (loading chal rahi hai), toh dummy data return karo taake crash na ho
+const kpis = useMemo(() => {
+    // 1. Agar dashboardData nahi hai, toh empty structure return karein
     if (!dashboardData) {
       return {
         curMonth: { revenue: 0, profit: 0, expenses: 0, transactions: 0 },
@@ -208,31 +222,66 @@ export function Dashboard() {
       };
     }
 
-    // Jab data aa jaye, tab asli data se calculation karo
-    const { products, customers, suppliers, purchases } = dashboardData;
+    // 2. Destructure data
+    const { products, customers, suppliers, purchases, sales } = dashboardData;
 
+    // 3. Helper function (sabse upar define kiya hai taake error na aaye)
+// const calculateTotal = (data, statusFilter = 'paid') => {
+//   if (!Array.isArray(data)) return 0;
+//   return data.reduce((sum, item) => {
+//     // Locha yahan hai: yeh sirf 'paid' ko skip kar raha hai,
+//     // baqi 'pending', 'approved', 'hold' sabko add kar raha hai
+//     if (item.status?.toLowerCase() !== statusFilter.toLowerCase()) {
+//       const amount = item.dueAmount || item.remainingAmount || item.totalAmount || 0;
+//       return sum + Number(amount);
+//     }
+//     return sum;
+//   }, 0);
+// };
+const calculateTotal = (data, targetStatus) => {
+  if (!Array.isArray(data)) return 0;
+  
+  return data.reduce((sum, item) => {
+    // SIRF 'approved' status walon ko hi receivable mein lo
+    if (item.status?.toLowerCase() === targetStatus.toLowerCase()) {
+      const amount = item.remainingAmount || item.totalAmount || 0; // remainingAmount use karo
+      return sum + Number(amount);
+    }
+    return sum;
+  }, 0);
+};
+
+    // 4. Basic Analytics Metrics
     const curMonth = MONTHLY_ANALYTICS[MONTHLY_ANALYTICS.length - 1] || { revenue: 0, profit: 0, expenses: 0, transactions: 0 };
     const prevMonth = MONTHLY_ANALYTICS[MONTHLY_ANALYTICS.length - 2] || { revenue: 0, profit: 0, expenses: 0, transactions: 0 };
+    
     const totalRevenue = MONTHLY_ANALYTICS.reduce((s, m) => s + m.revenue, 0);
     const totalProfit = MONTHLY_ANALYTICS.reduce((s, m) => s + m.profit, 0);
     const totalExpenses = MONTHLY_ANALYTICS.reduce((s, m) => s + m.expenses, 0);
     const totalTxns = MONTHLY_ANALYTICS.reduce((s, m) => s + m.transactions, 0);
 
+    // 5. Operational KPIs
+    const activeSuppliers = Array.isArray(suppliers) ? suppliers.filter(s => s.status === 'active').length : 0;
+    const activeCustomers = Array.isArray(customers) ? customers.filter(c => c.status === 'active').length : 0;
+    const pendingPOs = Array.isArray(purchases) ? purchases.filter(p => p.status?.toLowerCase() === 'pending').length : 0;
+    const lowStock = Array.isArray(products) ? products.filter(p => p.stock > 0 && p.stock <= (p.minStock || 10)).length : 0;
+    const outStock = Array.isArray(products) ? products.filter(p => p.stock === 0).length : 0;
+    
+    // 6. Financial Calculations using Helper
+    const totalPayable = calculateTotal(purchases, 'approved');
+    const totalReceivable = calculateTotal(sales, 'approved');
+    
+    const grossMargin = totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : '0';
+
     return {
       curMonth, prevMonth, totalRevenue, totalProfit, totalExpenses, totalTxns,
-      lowStock: products ? products.filter(p => p.stock > 0 && p.stock <= (p.minStock || 10)).length : 0,
-      outStock: products ? products.filter(p => p.stock === 0).length : 0,
-      activeSuppliers: suppliers ? suppliers.filter(s => s.status === 'active').length : 0,
-pendingPOs: purchases ? purchases.filter(p => p.status?.toLowerCase() === 'pending').length : 0,      activeCustomers: customers ? customers.filter(c => c.status === 'active').length : 0,
-      totalPayable: suppliers ? suppliers.reduce((s, sup) => s + (sup.balance || 0), 0) : 0,
-      totalReceivable: customers ? customers.reduce((s, c) => s + (c.balance || 0), 0) : 0,
-      grossMargin: totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : '0'
+      totalPayable, totalReceivable, lowStock, outStock, activeSuppliers,
+      pendingPOs, activeCustomers, grossMargin
     };
-  }, [dashboardData]); // Dependency sirf dashboardData rahegi
-
+  }, [dashboardData]);
   // 5. AB SAARE HOOKS KHATAM HONE KE BAAD LOADING CHECK LAGAYEIN
   // if (loading) return <div className="p-20 text-center text-slate-500 font-bold">Loading Matrix ERP...</div>;
-if (loading) {
+  if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] w-full gap-4">
         {/* Animated Spinner Wheel */}
@@ -251,8 +300,8 @@ if (loading) {
 
   // 6. SAFE DESTRUCTURING FOR UI (Kyunke loading khatam ho chuki hai)
   const { products, customers, suppliers } = dashboardData;
-const purchases = dashboardData.purchases || [];
- 
+  const purchases = dashboardData.purchases || [];
+
   // ── Derived KPIs ────────────────────────────────────────────────────────────
 
 
@@ -647,39 +696,39 @@ const purchases = dashboardData.purchases || [];
           </div>
 
           {/* Low Stock Products Table */}
-       {kpis.lowStock > 0 && (
-  <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Critical Stock Items</p>
-    <div className="space-y-1.5 max-h-40 overflow-y-auto">
-      {products
-        .filter(p => p.stock <= (p.minStock || 10))
-        .slice(0, 6)
-        .map(p => {
-          // FIX: Check if name/category are objects
-          const nameDisplay = typeof p.name === 'object' ? (p.name?.name || "Unknown") : (p.name || "Unknown");
-          const catDisplay = typeof p.category === 'object' ? (p.category?.name || "N/A") : (p.category || "N/A");
-          
-          return (
-            <div key={p.id || p.id} className="flex items-center justify-between py-1.5 px-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-              <div className="flex items-center gap-2">
-                <span className="text-base">{p.image || '📦'}</span>
-                <div>
-                  <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate max-w-[140px]">{nameDisplay}</p>
-                  <p className="text-[10px] text-slate-400">{catDisplay}</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className={`text-[11px] font-black ${p.stock === 0 ? 'text-rose-600 dark:text-rose-400' : 'text-amber-600 dark:text-amber-400'}`}>
-                  {p.stock} {p.unit}
-                </p>
-                <p className="text-[10px] text-slate-400">min: {p.minStock || 10}</p>
+          {kpis.lowStock > 0 && (
+            <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Critical Stock Items</p>
+              <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                {products
+                  .filter(p => p.stock <= (p.minStock || 10))
+                  .slice(0, 6)
+                  .map(p => {
+                    // FIX: Check if name/category are objects
+                    const nameDisplay = typeof p.name === 'object' ? (p.name?.name || "Unknown") : (p.name || "Unknown");
+                    const catDisplay = typeof p.category === 'object' ? (p.category?.name || "N/A") : (p.category || "N/A");
+
+                    return (
+                      <div key={p.id || p.id} className="flex items-center justify-between py-1.5 px-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">{p.image || '📦'}</span>
+                          <div>
+                            <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate max-w-[140px]">{nameDisplay}</p>
+                            <p className="text-[10px] text-slate-400">{catDisplay}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className={`text-[11px] font-black ${p.stock === 0 ? 'text-rose-600 dark:text-rose-400' : 'text-amber-600 dark:text-amber-400'}`}>
+                            {p.stock} {p.unit}
+                          </p>
+                          <p className="text-[10px] text-slate-400">min: {p.minStock || 10}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
               </div>
             </div>
-          );
-        })}
-    </div>
-  </div>
-)}
+          )}
 
           {/* Inventory Value KPI */}
           <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-3">
