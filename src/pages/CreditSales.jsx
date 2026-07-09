@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect} from 'react';
 import { useApp } from '../context/AppContext';
 import { Button } from '../components/ui/Button';
 import { X, Trash2, Plus, CheckCircle } from 'lucide-react';
@@ -56,14 +56,22 @@ const SearchableSelect = ({ options, placeholder, onSelect, selectedId, showQty 
 
 // 2. Modal Component
 function CreditSaleModal({ onClose }) {
-  const { customers, products, addSale, sales } = useApp();
+  const { customers, products, addSale, sales,fetchCustomers } = useApp();
 
+  useEffect(() => {
+  if (fetchCustomers) fetchCustomers(); // Modal khulte hi list refresh hogi
+}, []);
   const [formData, setFormData] = useState({
-    invoiceNo: `INV-${String((sales?.filter(s => s.type === 'credit').length || 0) + 1).padStart(3, '0')}`,
-    customerId: '', date: new Date().toISOString().split('T')[0],
-    address: '', remarks: '', discountPct: 0, gstPct: 0, delivery: 0,
-    items: [{ productId: '', qty: 1, price: 0, stock: 0 }]
-  });
+  invoiceNo: `INV-${String((sales?.filter(s => s.type === 'credit').length || 0) + 1).padStart(3, '0')}`,
+  customerId: '', 
+  date: new Date().toISOString().split('T')[0],
+  address: '', 
+  remarks: '', 
+  discountPct: 0, // '0' se init karo
+  gstPct: 0, 
+  delivery: 0,
+  items: [{ productId: '', qty: 1, price: 0, stock: 0 }],
+});
 
   const handleProductSelect = (idx, productId) => {
     const product = products?.find(p => p._id === productId);
@@ -88,7 +96,29 @@ function CreditSaleModal({ onClose }) {
   const gstAmt = ((subTotal - discountAmt) * Number(formData.gstPct)) / 100;
   const grandTotal = subTotal - discountAmt + gstAmt + Number(formData.delivery);
 
-  const handlePostInvoice = () => {
+ const handlePostInvoice = () => {
+    // 1. Customer ko find karo
+    const customer = customers?.find(c => c._id === formData.customerId);
+
+    // 2. Validation Checks
+    if (!customer) {
+      return alert("Please select a valid customer!");
+    }
+
+    if (customer.isCreditEnabled === false) {
+      return alert(`Error: Credit sales are disabled for ${customer.name}.`);
+    }
+
+    // Current Balance + New Invoice Total
+    // Note: Agar customer object mein 'balance' field hai toh use karo
+    const currentBalance = Number(customer.balance || 0);
+    const totalExposure = currentBalance + grandTotal;
+
+    if (totalExposure > Number(customer.creditLimit || 0)) {
+      return alert(`⚠️ Warning: Credit limit exceeded!\nMax Limit: ${customer.creditLimit}\nCurrent Total: ${totalExposure}`);
+    }
+
+    // 3. Sab sahi hai toh proceed karo
     const processedItems = formData.items.map(i => ({
       productId: i.productId,
       quantity: Number(i.qty),
@@ -105,8 +135,10 @@ function CreditSaleModal({ onClose }) {
       grandTotal: grandTotal,
       paymentMethod: 'Credit',
       type: 'credit',
-      status: 'pending'
+      status: 'pending',
+      dueDate: new Date(new Date().setDate(new Date().getDate() + Number(customer.creditDays || 30))) // Due date calculation
     });
+    
     onClose();
   };
 

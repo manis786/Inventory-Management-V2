@@ -22,8 +22,11 @@ export function Customers() {
     email: '',
     address: '',
     balance: '0',
+    creditLimit: 0,
+    creditDays: 30, // Default 30 din
+    isCreditEnabled: true,
     status: 'active' // Ye add kar dein
-});
+  });
 
   // Fetch Customers from Database
   const fetchCustomers = async () => {
@@ -43,7 +46,7 @@ export function Customers() {
   const totalReceivables = customers.reduce((sum, c) => sum + (c.balance || 0), 0);
 
   // Submit Form (Create or Update)
-  const handleFormSubmit = async (e) => {
+ const handleFormSubmit = async (e) => {
     e.preventDefault();
     try {
       if (editingCust) {
@@ -52,7 +55,10 @@ export function Customers() {
         await axios.post('http://localhost:5000/api/customers', formData);
       }
       setFormModalOpen(false);
-      fetchCustomers(); // List refresh karein
+      
+      // FIX: Yahan manual refresh force karo agar AppContext auto-update nahi ho raha
+      window.location.reload(); 
+      // Ya phir: fetchCustomers(); 
     } catch (err) {
       alert("Error saving customer");
     }
@@ -93,7 +99,25 @@ export function Customers() {
     <div className="space-y-5 p-4">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-black text-slate-800">Customer Registry</h1>
-        <Button variant="primary" icon={PlusCircle} onClick={() => { setEditingCust(null); setFormModalOpen(true); }}>
+        <Button
+          variant="primary"
+          icon={PlusCircle}
+          onClick={() => {
+            setEditingCust(null); // Edit mode khatam karo
+            setFormData({         // Fields clear karo
+              name: '',
+              phone: '',
+              email: '',
+              address: '',
+              balance: '0',
+              status: 'active',
+              creditLimit: '0',
+              creditDays: '30',
+              isCreditEnabled: true
+            });
+            setFormModalOpen(true); // Modal kholo
+          }}
+        >
           Register Customer
         </Button>
       </div>
@@ -101,91 +125,115 @@ export function Customers() {
       <KPICard title="Total Receivables" value={formatPKR(totalReceivables)} icon={BookOpen} color="rose" />
 
       {loading ? <p>Loading...</p> : <Table columns={columns} data={customers} />}
-     <Modal
-  isOpen={formModalOpen}
-  onClose={() => setFormModalOpen(false)}
-  title={editingCust ? 'Modify Customer Profile' : 'Register New Customer'}
-  size="lg"
->
-  <form onSubmit={handleFormSubmit} className="space-y-6">
-    
-    {/* Section 1: Personal Details */}
-    <div className="space-y-4">
-      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b pb-1">
-        Personal Details
-      </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Input
-          label="Full Customer Name"
-          placeholder="e.g. Muhammad Ahmed"
-          required
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-        />
-        <Input
-          label="Phone Number"
-          placeholder="0300-1234567"
-          value={formData.phone}
-          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-        />
-      </div>
-      <Input
-        label="Email Address"
-        type="email"
-        placeholder="customer@example.com"
-        value={formData.email}
-        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-      />
-    </div>
+      <Modal
+        isOpen={formModalOpen}
+        onClose={() => setFormModalOpen(false)}
+        title={editingCust ? 'Modify Customer Profile' : 'Register New Customer'}
+        size="lg"
+      >
+        <form onSubmit={handleFormSubmit} className="space-y-6">
 
-    {/* Section 2: Account & Financials */}
-    <div className="space-y-4">
-      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b pb-1">
-        Account & Ledger Info
-      </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Input
-          label="Billing Address"
-          placeholder="Street, City, Area"
-          value={formData.address}
-          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-        />
-        <Input
-          label="Opening Credit Balance (PKR)"
-          type="number"
-          placeholder="0.00"
-          disabled={!!editingCust}
-          value={formData.balance}
-          onChange={(e) => setFormData({ ...formData, balance: e.target.value })}
-          className="font-bold text-indigo-600"
-        />
-      </div>
-      
-      {/* Status Toggle */}
-      <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-semibold text-slate-600">Account Status</label>
-        <select
-          className="w-full p-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500"
-          value={formData.status || 'active'}
-          onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-        >
-          <option value="active">Active (Can make Sales)</option>
-          <option value="inactive">Inactive (Suspended)</option>
-        </select>
-      </div>
-    </div>
+          {/* Section 1: Personal Details */}
+          <div className="space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b pb-1">
+              Personal Details
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                label="Full Customer Name"
+                placeholder="e.g. Muhammad Ahmed"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              />
+              <Input
+                label="Phone Number"
+                placeholder="0300-1234567"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              />
+            </div>
+            <Input
+              label="Email Address"
+              type="email"
+              placeholder="customer@example.com"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            />
+          </div>
 
-    {/* Action Buttons */}
-    <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-      <Button variant="outline" type="button" onClick={() => setFormModalOpen(false)}>
-        Cancel
-      </Button>
-      <Button variant="primary" type="submit" className="px-8">
-        {editingCust ? 'Update Profile' : 'Confirm Registration'}
-      </Button>
-    </div>
-  </form>
-</Modal>
+          {/* Section 2: Account & Financials */}
+          <div className="space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b pb-1">
+              Account & Ledger Info
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                label="Billing Address"
+                placeholder="Street, City, Area"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              />
+              <Input
+                label="Opening Credit Balance (PKR)"
+                type="number"
+                placeholder="0.00"
+                disabled={!!editingCust}
+                value={formData.balance}
+                onChange={(e) => setFormData({ ...formData, balance: e.target.value })}
+                className="font-bold text-indigo-600"
+              />
+              <Input
+                label="Credit Limit (PKR)"
+                type="number"
+                value={formData.creditLimit}
+                onChange={(e) => setFormData({ ...formData, creditLimit: e.target.value })}
+              />
+              <Input
+                label="Credit Period (Days)"
+                type="number"
+                value={formData.creditDays}
+                onChange={(e) => setFormData({ ...formData, creditDays: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-600">Account Status</label>
+                <select
+                  className="w-full p-2 border rounded-lg text-sm"
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1.5 justify-end">
+                <label className="flex items-center gap-2 text-xs font-bold cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4"
+                    checked={formData.isCreditEnabled}
+                    onChange={(e) => setFormData({ ...formData, isCreditEnabled: e.target.checked })}
+                  />
+                  Enable Credit Sales
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+            <Button variant="outline" type="button" onClick={() => setFormModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" type="submit" className="px-8">
+              {editingCust ? 'Update Profile' : 'Confirm Registration'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
 
     </div>
   );
