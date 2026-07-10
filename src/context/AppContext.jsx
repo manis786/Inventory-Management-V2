@@ -175,8 +175,22 @@ const logout = () => {
   setIsAuthenticated(false);
   setUser(null);
 };
-
-  const addMovement = (movement) => setMovements(prev => [movement, ...prev]);
+const addMovement = async (movementData) => {
+  try {
+    // API Call
+    const res = await axios.post('http://localhost:5000/api/transactions', movementData);
+    
+    // State Update
+    setMovements(prev => [res.data.data, ...prev]);
+    addToast('Transaction recorded successfully!', 'success');
+  } catch (err) {
+    // Console mein error details dekhen
+    console.error("Backend Validation Error:", err.response?.data);
+    addToast('Error saving transaction: ' + (err.response?.data?.message || 'Missing fields'), 'error');
+    throw err;
+  }
+};
+ 
 
   const updateSaleStatus = async (id, status) => {
   try {

@@ -11,154 +11,94 @@ import { formatPKR } from '../data/store';
 import { PlusCircle, Trash2, Eye } from 'lucide-react';
 
 export function Purchases() {
-  const { purchases = [], suppliers = [], products = [], setProducts, addPurchaseOrder, receivePurchaseOrder, addToast, addMovement } = useApp();
+  const { 
+    purchases = [], suppliers = [], products = [], 
+    setProducts, addPurchaseOrder, receivePurchaseOrder, 
+    addToast, addMovement, fetchPurchases 
+  } = useApp();
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedPO, setSelectedPO] = useState(null);
   const [selectedSupplierId, setSelectedSupplierId] = useState('');
   const [poItems, setPoItems] = useState([]);
   const [draftProductId, setDraftProductId] = useState('');
   const [draftQty, setDraftQty] = useState('');
   const [draftCost, setDraftCost] = useState('');
-  const [detailModalOpen, setDetailModalOpen] = useState(false);
-  const [selectedPO, setSelectedPO] = useState(null);
 
-  const handleProductSelect = (productId) => {
-    setDraftProductId(productId);
-    const prod = products.find(p => p.id === productId);
-    if (prod) setDraftCost(String(prod.costPrice));
+  // Approval and Transaction Logic
+  const handlePurchaseStatusChange = async (poId, newStatus) => {
+    const selectedPO = purchases.find(p => p._id === poId);
+    if (!selectedPO) return;
+console.log("--- Approval Process Started ---");
+    if (newStatus === 'Approved' && selectedPO.status === 'Approved') {
+      alert("Yeh PO pehle se Approved hai!");
+      return;
+    }
+
+    if (!window.confirm(`Kya aap status "${newStatus}" karna chahte hain?`)) return;
+
+    try {
+      await axios.put(`http://localhost:5000/api/purchases/${poId}`, { status: newStatus });
+console.log("Items to process:", selectedPO.items);
+      if (newStatus === 'Approved') {
+        await receivePurchaseOrder(poId);
+        for (const item of selectedPO.items) {
+          const movementData = {
+    product: item.product?._id || item.productId, // Backend 'product' mang raha hai
+    type: 'PURCHASE',                             // Backend 'PURCHASE' enum expect kar raha hai
+    quantity: Number(item.quantity),
+    price: Number(item.costPrice),
+    totalAmount: Number(item.quantity) * Number(item.costPrice),
+    refId: String(selectedPO.poNumber || poId),
+    purchaseId: poId,
+    supplier: selectedPO.supplier?._id
+  };
+        console.log("Sending to API:", movementData); // Console mein check karen
+  await addMovement(movementData);  
+         console.log("Successfully posted movement for:", item.product?.name);
+        }
+        console.error("FAILED to post movement for:", item.product?.name, err);
+      }
+      console.log("--- Approval Process Finished ---");
+      await fetchPurchases();
+      addToast('Status updated successfully!', 'success');
+    } catch (err) {
+      addToast('Error updating status', 'error');
+    }
   };
 
   const handleAddItem = (e) => {
     e.preventDefault();
-    if (!draftProductId || !draftQty || Number(draftQty) <= 0 || !draftCost || Number(draftCost) <= 0) return;
     const prod = products.find(p => p.id === draftProductId);
-    if (prod) {
+    if (prod && draftQty > 0) {
       setPoItems([...poItems, { productId: prod._id, name: prod.name, quantity: Number(draftQty), costPrice: Number(draftCost), total: Number(draftQty) * Number(draftCost) }]);
     }
     setDraftProductId(''); setDraftQty(''); setDraftCost('');
   };
 
-  // const handleApprovePO = async (po) => {
-  //   try {
-  //     // 1. Order Status Update
-  //     await receivePurchaseOrder(po._id);
-
-  //     for (const item of po.items) {
-  //       // 2. Transaction Log (Audit Trail)
-  //       // Yahan hum naye transaction route ko hit kar rahe hain
-  //       await axios.post('http://localhost:5000/api/transactions', {
-  //         product: item.product?._id,
-  //         type: 'PURCHASE',
-  //         quantity: item.quantity,
-  //         price: item.costPrice, // Yeh field add karein
-  //         totalAmount: item.quantity * item.costPrice, // Yeh field add karein
-  //         refId: po.poNumber,
-  //         purchaseId: po._id, // Relation ke liye zaroori hai
-  //         supplier: po.supplier?._id
-  //       });
-
-  //       // 3. Local State Update (UI ke liye)
-  //       const product = products.find(p => p._id === item.product?._id);
-  //       if (product) {
-  //         const newStock = Number(product.stock) + Number(item.quantity);
-  //         setProducts(prev => prev.map(p => p._id === product._id ? { ...p, stock: newStock } : p));
-  //       }
-  //     }
-
-  //     if (addToast) addToast('Order Approved & Transaction Logged!', 'success');
-  //   } catch (err) {
-  //     console.error("Approval Error:", err);
-  //     if (addToast) addToast('Failed to log transaction', 'error');
-  //   }
-  // };
-
-const handlePurchaseStatusChange = async (poId, newStatus) => {
-  if (!window.confirm(`Kya aap status "${newStatus}" karna chahte hain?`)) return;
-
-  try {
-    await axios.put(`http://localhost:5000/api/purchases/${poId}`, { status: newStatus });
-
-    if (typeof setPurchases === 'function') {
-      setPurchases(prev => prev.map(p => p._id === poId ? { ...p, status: newStatus } : p));
-    }
-
-    if (addToast) addToast(`Status updated to ${newStatus}`, 'success');
-  } catch (err) {
-    console.error("Status Update Error:", err);
-    if (addToast) addToast('Failed to update status', 'error');
-  }
-};
-    
-const getStatusColor = (status) => {
-  switch (status?.toLowerCase()) {
-    case 'approved': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
-    case 'rejected': return 'bg-red-100 text-red-700 border-red-200';
-    case 'hold': return 'bg-amber-100 text-amber-700 border-amber-200';
-    case 'void': return 'bg-slate-200 text-slate-600 border-slate-300';
-    default: return 'bg-indigo-50 text-indigo-700 border-indigo-200'; // Pending
-  }
-};
-    
-   
-  const handleRemoveItem = (idx) => setPoItems(prev => prev.filter((_, i) => i !== idx));
-
   const handlePoSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedSupplierId || poItems.length === 0) return;
-    const payload = {
-      supplier: selectedSupplierId,
-      items: poItems.map(item => ({ product: item.productId, quantity: Number(item.quantity), costPrice: Number(item.costPrice) })),
-      totalAmount: poItems.reduce((sum, item) => sum + item.total, 0)
-    };
-    await addPurchaseOrder(payload);
-    setCreateModalOpen(false);
-    setPoItems([]);
-    setSelectedSupplierId('');
+    await addPurchaseOrder({ supplier: selectedSupplierId, items: poItems.map(i => ({ product: i.productId, quantity: i.quantity, costPrice: i.costPrice })), totalAmount: poItems.reduce((s, i) => s + i.total, 0) });
+    setCreateModalOpen(false); setPoItems([]); setSelectedSupplierId('');
   };
-const columns = [
-  { key: 'poNumber', label: 'PO Code', render: (row) => <span className="bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded text-[10px]">{row.poNumber || `PO-${row._id?.slice(-5).toUpperCase()}`}</span> },
-  { key: 'date', label: 'Date', render: (row) => <span className="text-xs">{new Date(row.date).toLocaleDateString('en-GB')}</span> },
-  { key: 'supplierName', label: 'Supplier', render: (row) => <span className="text-xs truncate block max-w-[120px]">{row.supplier?.name || 'N/A'}</span> },
-  { key: 'totalAmount', label: 'Total', render: (row) => <span className="text-xs font-bold">{formatPKR(row.totalAmount)}</span> },
-  
-  // Status (Sirf Label)
-  { 
-    key: 'status', 
-    label: 'Status', 
-    render: (row) => <div className="scale-90 origin-left"><StatusBadge status={row.status || 'Pending'} /></div> 
-  },
 
-  // Action (Dropdown)
-  { 
-    key: 'action', 
-    label: 'Action', 
-    render: (row) => (
-      <select
-        value={row.status || 'Pending'}
-        onChange={(e) => handlePurchaseStatusChange(row._id, e.target.value)}
-        className={`px-2 py-1 rounded text-[9px] font-bold uppercase border cursor-pointer outline-none ${getStatusColor(row.status)}`}
-      >
+  const columns = [
+    { key: 'poNumber', label: 'PO Code', render: (row) => <span className="text-xs font-bold">{row.poNumber || `PO-${row._id?.slice(-5).toUpperCase()}`}</span> },
+    { key: 'date', label: 'Date', render: (row) => <span className="text-xs">{new Date(row.date).toLocaleDateString()}</span> },
+    { key: 'supplierName', label: 'Supplier', render: (row) => <span>{row.supplier?.name}</span> },
+    { key: 'totalAmount', label: 'Total', render: (row) => <span>{formatPKR(row.totalAmount)}</span> },
+    { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
+    { key: 'action', label: 'Action', render: (row) => (
+      <select disabled={row.status === 'Approved'} value={row.status} onChange={(e) => handlePurchaseStatusChange(row._id, e.target.value)} className="border p-1 text-xs">
         <option value="Pending">Pending</option>
-        <option value="Approved">Approve</option>
-        <option value="Rejected">Reject</option>
+        <option value="Approved">Approved</option>
         <option value="Hold">Hold</option>
-        <option value="Void">Void</option>
+        <option value="Rejected">Rejected</option>
       </select>
-    ) 
-  },
-
-  // Eye (Aankh)
-  {
-    key: 'details', 
-    label: '', 
-    render: (row) => (
-      <Button variant="ghost" icon={Eye} onClick={() => handleOpenDetails(row)} size="sm" className="p-1" />
-    )
-  }
-];
-  const handleOpenDetails = (po) => { setSelectedPO(po); setDetailModalOpen(true); };
-
-
+    )},
+    { key: 'details', label: '', render: (row) => <Button icon={Eye} size="sm" onClick={() => { setSelectedPO(row); setDetailModalOpen(true); }} /> }
+  ];
 
   return (
     <div className="space-y-5">
@@ -166,83 +106,46 @@ const columns = [
         <h1 className="text-xl font-black">Purchase Orders</h1>
         <Button onClick={() => setCreateModalOpen(true)} icon={PlusCircle}>Draft Order</Button>
       </div>
-      <Table columns={columns} data={purchases || []} />
 
+      <Table columns={columns} data={purchases} />
+
+      {/* CREATE MODAL */}
       <Modal isOpen={createModalOpen} onClose={() => setCreateModalOpen(false)} title="Draft Purchase Order" size="xl">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 p-4 max-h-[80vh] overflow-y-auto">
-          <div className="lg:col-span-5 space-y-4">
+        <div className="grid grid-cols-12 gap-5 p-4">
+          <div className="col-span-5 space-y-4">
             <Select label="Select Supplier" value={selectedSupplierId} onChange={(e) => setSelectedSupplierId(e.target.value)}>
               <option value="">Choose supplier...</option>
-              {suppliers.map((s) => <option key={s._id} value={s._id}>{s.name}</option>)}
+              {suppliers.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
             </Select>
-            <form onSubmit={handleAddItem} className="space-y-3 p-4 border rounded-lg bg-gray-50">
-              <Select label="Choose Product" value={draftProductId} onChange={(e) => handleProductSelect(e.target.value)}>
-                <option value="">Choose item...</option>
-                {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+            <form onSubmit={handleAddItem} className="p-4 border bg-gray-50 rounded">
+              <Select label="Product" value={draftProductId} onChange={(e) => { const p = products.find(i => i.id === e.target.value); setDraftProductId(e.target.value); if(p) setDraftCost(p.costPrice); }}>
+                <option value="">Select...</option>
+                {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </Select>
-              <div className="grid grid-cols-2 gap-2">
-                <Input label="Cost" type="number" value={draftCost} onChange={(e) => setDraftCost(e.target.value)} />
-                <Input label="Qty" type="number" value={draftQty} onChange={(e) => setDraftQty(e.target.value)} />
-              </div>
-              <Button variant="secondary" type="submit" className="w-full">Add Item</Button>
+              <Input label="Cost" type="number" value={draftCost} onChange={(e) => setDraftCost(e.target.value)} />
+              <Input label="Qty" type="number" value={draftQty} onChange={(e) => setDraftQty(e.target.value)} />
+              <Button type="submit" className="w-full mt-2">Add Item</Button>
             </form>
           </div>
-          <div className="lg:col-span-7">
-            <h3 className="font-bold text-sm mb-2">Order Items</h3>
-            <div className="h-[250px] overflow-y-auto border rounded-lg divide-y bg-white">
-              {poItems.length === 0 ? (
-                <p className="p-4 text-center text-gray-400 text-sm">No items added yet</p>
-              ) : (
-                poItems.map((item, idx) => (
-                  <div key={`${item.productId}-${idx}`} className="p-3 flex justify-between text-xs items-center">
-                    <span className="font-medium">{item.name}</span>
-                    <span className="text-gray-600">{formatPKR(item.total)}</span>
-                    <button onClick={() => handleRemoveItem(idx)} className="text-rose-500 hover:text-rose-700">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))
-              )}
+          <div className="col-span-7">
+            <div className="h-[250px] overflow-y-auto border p-2">
+              {poItems.map((item, i) => <div key={i} className="flex justify-between text-xs p-2 border-b"><span>{item.name}</span><span>{formatPKR(item.total)}</span></div>)}
             </div>
-            <Button variant="success" className="w-full mt-4" onClick={handlePoSubmit} disabled={poItems.length === 0}>
-              Submit Order
-            </Button>
+            <Button className="w-full mt-4" onClick={handlePoSubmit}>Submit Order</Button>
           </div>
         </div>
       </Modal>
 
-      <Modal isOpen={detailModalOpen} onClose={() => setDetailModalOpen(false)} title="Order Details" size="2xl">
+      {/* DETAIL MODAL */}
+      <Modal isOpen={detailModalOpen} onClose={() => setDetailModalOpen(false)} title="Order Details">
         {selectedPO && (
-          <div className="p-4 w-full">
-            <div className="flex justify-between mb-6 text-sm text-gray-600 border-b pb-4">
-              <p><strong>PO Number:</strong> {selectedPO.poNumber || `PO-${selectedPO._id?.slice(-5).toUpperCase()}`}</p>
-              <p><strong>Date:</strong> {new Date(selectedPO.date).toLocaleDateString('en-GB')}</p>
-            </div>
-            <div className="grid grid-cols-12 gap-2 bg-gray-100 p-3 rounded-lg text-xs font-bold uppercase text-gray-700">
-              <div className="col-span-6">Product</div>
-              <div className="col-span-2 text-center">Qty</div>
-              <div className="col-span-2 text-right">Price</div>
-              <div className="col-span-2 text-right">Total</div>
-            </div>
-            <div className="mt-2 space-y-1">
-              {selectedPO.items?.map((item, idx) => (
-                <div key={item._id || idx} className="grid grid-cols-12 gap-2 p-3 border-b text-sm items-center hover:bg-gray-50">
-                  <div className="col-span-6 font-medium text-sm whitespace-normal break-words pr-2">
-                    {item.product?.name || 'N/A'}
-                  </div>
-                  <div className="col-span-2 text-center">{item.quantity}</div>
-                  <div className="col-span-2 text-right">{formatPKR(item.costPrice)}</div>
-                  <div className="col-span-2 text-right font-bold text-blue-800">{formatPKR(item.quantity * item.costPrice)}</div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-6 border-t pt-4 text-right">
-              <div className="text-xl font-black text-blue-900">Total Value: {formatPKR(selectedPO.totalAmount)}</div>
-            </div>
+          <div className="p-4">
+            <p><strong>PO:</strong> {selectedPO.poNumber}</p>
+            {selectedPO.items?.map((item, i) => <div key={i} className="flex justify-between py-2 border-b"><span>{item.product?.name}</span><span>x{item.quantity}</span></div>)}
           </div>
         )}
       </Modal>
     </div>
   );
 }
-export default Purchases;
+export default Purchases

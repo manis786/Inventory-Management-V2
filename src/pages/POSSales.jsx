@@ -152,6 +152,7 @@ export function POSSales() {
                 onClick={() => addToCart(p)}
                 className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer hover:border-indigo-500 transition-all flex flex-col justify-between shadow-sm relative group"
               >
+                
                 <div>
                   <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate pr-2">{p.name}</h3>
                   <p className="text-[10px] text-slate-400 font-medium mt-0.5">
