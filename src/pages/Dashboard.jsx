@@ -1,18 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { formatPKR } from '../data/store';
-// import { PRODUCTS } from '../data/products';
-// import { CUSTOMERS } from '../data/customers';
-// import { SUPPLIERS } from '../data/suppliers';
-// import { PURCHASE_ORDERS } from '../data/purchases';
-import {
-  MONTHLY_ANALYTICS,
-  WEEKLY_SALES,
-  CATEGORY_DISTRIBUTION,
-  PAYMENT_METHOD_SHARE,
-  BRANCH_ANALYTICS,
-  STOCK_LEVELS,
-  AI_FORECASTING,
-} from '../data/analytics';
 import {
   AreaChart, Area, BarChart, Bar, LineChart, Line,
   PieChart, Pie, Cell, RadialBarChart, RadialBar,
@@ -147,13 +134,20 @@ const AlertRow = ({ type, title, desc, time }) => {
 };
 
 // ─── Combined Historical + Forecast chart data ────────────────────────────────
-const buildForecastData = () => {
-  const hist = MONTHLY_ANALYTICS.map(m => ({
-    month: m.month.slice(0, 3),
+const buildForecastData = (monthlyAnalytics = []) => {
+  const hist = monthlyAnalytics.map(m => ({
+    month: (m.month || '').slice(0, 3),
     actual: m.revenue,
     profit: m.profit,
     expenses: m.expenses,
   }));
+  // Static AI forecast for next 4 months (can be replaced with ML later)
+  const AI_FORECASTING = [
+    { month: 'Jul 2026', forecast: 2750000, upperBound: 3000000, lowerBound: 2500000 },
+    { month: 'Aug 2026', forecast: 2900000, upperBound: 3200000, lowerBound: 2600000 },
+    { month: 'Sep 2026', forecast: 3200000, upperBound: 3550000, lowerBound: 2850000 },
+    { month: 'Oct 2026', forecast: 3050000, upperBound: 3400000, lowerBound: 2700000 },
+  ];
   const fore = AI_FORECASTING.slice(0, 4).map(f => ({
     month: f.month.slice(0, 3),
     forecast: f.forecast,
@@ -168,39 +162,44 @@ export function Dashboard() {
   // 1. SAARE HOOKS (STATES) TOP PAR
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [activeTab, setActiveTab] = useState('revenue');
 
   // 2. FETCH DATA EFFECT
   useEffect(() => {
-  // Flag taake cleanup handle ho sake
-  let isMounted = true; 
+    let isMounted = true;
 
-  const getDashboardData = async () => {
-    try {
-      const res = await fetch('http://localhost:5000/api/dashboard/summary');
-      const data = await res.json();
-      
-      // Agar component abhi bhi mounted hai tabhi state update karein
-      if (isMounted) {
-        setDashboardData(data);
-        setLoading(false);
+    const getDashboardData = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/dashboard/summary');
+        if (!res.ok) {
+          throw new Error(`Server error: ${res.status}`);
+        }
+        const data = await res.json();
+        if (isMounted) {
+          setDashboardData(data);
+          setError(null);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error('Dashboard fetch error:', err);
+        if (isMounted) {
+          setError(err.message || 'Connection failed');
+          setLoading(false);
+        }
       }
-    } catch (err) {
-      console.error("Dashboard fetch error:", err);
-      if (isMounted) {
-        setLoading(false);
-      }
-    }
-  };
+    };
 
-  getDashboardData();
+    getDashboardData();
+    // Auto-refresh every 60 seconds
+    const interval = setInterval(getDashboardData, 60000);
 
-  // Cleanup function
-  return () => {
-    isMounted = false;
-  };
-}, []); // Empty dependency array []
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   // 3. TIME INTERVAL EFFECT
   useEffect(() => {
@@ -211,7 +210,6 @@ export function Dashboard() {
   
   // 4. USE-MEMO KO 'IF (LOADING)' SE UPAR RAKH DIYA (RULES OF HOOKS SAFE)
 const kpis = useMemo(() => {
-    // 1. Agar dashboardData nahi hai, toh empty structure return karein
     if (!dashboardData) {
       return {
         curMonth: { revenue: 0, profit: 0, expenses: 0, transactions: 0 },
@@ -222,55 +220,37 @@ const kpis = useMemo(() => {
       };
     }
 
-    // 2. Destructure data
-    const { products, customers, suppliers, purchases, sales } = dashboardData;
+    const { products, customers, suppliers, purchases, sales, monthlyAnalytics = [] } = dashboardData;
 
-    // 3. Helper function (sabse upar define kiya hai taake error na aaye)
-// const calculateTotal = (data, statusFilter = 'paid') => {
-//   if (!Array.isArray(data)) return 0;
-//   return data.reduce((sum, item) => {
-//     // Locha yahan hai: yeh sirf 'paid' ko skip kar raha hai,
-//     // baqi 'pending', 'approved', 'hold' sabko add kar raha hai
-//     if (item.status?.toLowerCase() !== statusFilter.toLowerCase()) {
-//       const amount = item.dueAmount || item.remainingAmount || item.totalAmount || 0;
-//       return sum + Number(amount);
-//     }
-//     return sum;
-//   }, 0);
-// };
-const calculateTotal = (data, targetStatus) => {
-  if (!Array.isArray(data)) return 0;
-  
-  return data.reduce((sum, item) => {
-    // SIRF 'approved' status walon ko hi receivable mein lo
-    if (item.status?.toLowerCase() === targetStatus.toLowerCase()) {
-      const amount = item.remainingAmount || item.totalAmount || 0; // remainingAmount use karo
-      return sum + Number(amount);
-    }
-    return sum;
-  }, 0);
-};
+    const calculateTotal = (data, targetStatus) => {
+      if (!Array.isArray(data)) return 0;
+      return data.reduce((sum, item) => {
+        if (item.status?.toLowerCase() === targetStatus.toLowerCase()) {
+          const amount = item.remainingAmount || item.totalAmount || 0;
+          return sum + Number(amount);
+        }
+        return sum;
+      }, 0);
+    };
 
-    // 4. Basic Analytics Metrics
-    const curMonth = MONTHLY_ANALYTICS[MONTHLY_ANALYTICS.length - 1] || { revenue: 0, profit: 0, expenses: 0, transactions: 0 };
-    const prevMonth = MONTHLY_ANALYTICS[MONTHLY_ANALYTICS.length - 2] || { revenue: 0, profit: 0, expenses: 0, transactions: 0 };
-    
-    const totalRevenue = MONTHLY_ANALYTICS.reduce((s, m) => s + m.revenue, 0);
-    const totalProfit = MONTHLY_ANALYTICS.reduce((s, m) => s + m.profit, 0);
-    const totalExpenses = MONTHLY_ANALYTICS.reduce((s, m) => s + m.expenses, 0);
-    const totalTxns = MONTHLY_ANALYTICS.reduce((s, m) => s + m.transactions, 0);
+    // Dynamic Analytics from real DB data
+    const curMonth = monthlyAnalytics[monthlyAnalytics.length - 1] || { revenue: 0, profit: 0, expenses: 0, transactions: 0 };
+    const prevMonth = monthlyAnalytics[monthlyAnalytics.length - 2] || { revenue: 0, profit: 0, expenses: 0, transactions: 0 };
+    const totalRevenue = monthlyAnalytics.reduce((s, m) => s + m.revenue, 0);
+    const totalProfit = monthlyAnalytics.reduce((s, m) => s + m.profit, 0);
+    const totalExpenses = monthlyAnalytics.reduce((s, m) => s + m.expenses, 0);
+    const totalTxns = monthlyAnalytics.reduce((s, m) => s + m.transactions, 0);
 
-    // 5. Operational KPIs
+    // Operational KPIs
     const activeSuppliers = Array.isArray(suppliers) ? suppliers.filter(s => s.status === 'active').length : 0;
     const activeCustomers = Array.isArray(customers) ? customers.filter(c => c.status === 'active').length : 0;
     const pendingPOs = Array.isArray(purchases) ? purchases.filter(p => p.status?.toLowerCase() === 'pending').length : 0;
     const lowStock = Array.isArray(products) ? products.filter(p => p.stock > 0 && p.stock <= (p.minStock || 10)).length : 0;
     const outStock = Array.isArray(products) ? products.filter(p => p.stock === 0).length : 0;
-    
-    // 6. Financial Calculations using Helper
+
+    // Financial totals
     const totalPayable = calculateTotal(purchases, 'approved');
     const totalReceivable = calculateTotal(sales, 'approved');
-    
     const grossMargin = totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : '0';
 
     return {
@@ -284,38 +264,58 @@ const calculateTotal = (data, targetStatus) => {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] w-full gap-4">
-        {/* Animated Spinner Wheel */}
         <div className="relative w-12 h-12">
           <div className="absolute inset-0 border-4 border-slate-200 dark:border-slate-800 rounded-full"></div>
           <div className="absolute inset-0 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
         </div>
-        {/* Loading Text with Fade Effect */}
         <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 animate-pulse tracking-wide">
-          Loading Dashboard Data
+          Loading Dashboard Data...
         </p>
       </div>
     );
   }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] w-full gap-4">
+        <div className="p-4 bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 rounded-2xl text-center max-w-md">
+          <p className="text-rose-600 dark:text-rose-400 font-bold text-sm mb-1">⚠️ Dashboard Load Failed</p>
+          <p className="text-rose-500 dark:text-rose-500 text-xs mb-3">{error}</p>
+          <button
+            onClick={() => { window.location.reload(); }}
+            className="text-xs font-bold bg-rose-600 text-white px-4 py-1.5 rounded-lg hover:bg-rose-700 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!dashboardData) return <div className="p-20 text-center text-rose-500">Data not found</div>;
 
-  // 6. SAFE DESTRUCTURING FOR UI (Kyunke loading khatam ho chuki hai)
+  // Destructure dynamic data from API
   const { products, customers, suppliers } = dashboardData;
   const purchases = dashboardData.purchases || [];
+  const monthlyAnalytics = dashboardData.monthlyAnalytics || [];
+  const weeklySales = dashboardData.weeklySales || [];
+  const categoryDistribution = dashboardData.categoryDistribution || [];
+  const paymentMethodShare = dashboardData.paymentMethodShare || [];
+  const stockLevels = dashboardData.stockLevels || [];
+  const recentTransactions = dashboardData.recentTransactions || [];
 
-  // ── Derived KPIs ────────────────────────────────────────────────────────────
+  const forecastData = buildForecastData(monthlyAnalytics);
 
-
-  const forecastData = buildForecastData();
-
-  // ── Revenue Tab Data ─────────────────────────────────────────────────────────
+  // ── Revenue Tab Data (Dynamic) ───────────────────────────────────────────────
   const tabData = {
-    revenue: MONTHLY_ANALYTICS.map(m => ({ name: m.month.slice(0, 3), value: m.revenue })),
-    profit: MONTHLY_ANALYTICS.map(m => ({ name: m.month.slice(0, 3), value: m.profit })),
-    expenses: MONTHLY_ANALYTICS.map(m => ({ name: m.month.slice(0, 3), value: m.expenses })),
-    transactions: MONTHLY_ANALYTICS.map(m => ({ name: m.month.slice(0, 3), value: m.transactions })),
+    revenue: monthlyAnalytics.map(m => ({ name: (m.month || '').slice(0, 3), value: m.revenue })),
+    profit: monthlyAnalytics.map(m => ({ name: (m.month || '').slice(0, 3), value: m.profit })),
+    expenses: monthlyAnalytics.map(m => ({ name: (m.month || '').slice(0, 3), value: m.expenses })),
+    transactions: monthlyAnalytics.map(m => ({ name: (m.month || '').slice(0, 3), value: m.transactions })),
   };
 
-  // ── Operational Alerts ───────────────────────────────────────────────────────
+  // ── Operational Alerts (Dynamic from real data) ──────────────────────────────
+  const latestTxn = recentTransactions[0];
   const alerts = [
     ...(kpis.outStock > 0 ? [{
       type: 'critical', title: `${kpis.outStock} Products Out of Stock`,
@@ -329,30 +329,27 @@ const calculateTotal = (data, targetStatus) => {
       type: 'warning', title: `${kpis.pendingPOs} Purchase Orders Pending`,
       desc: 'Supplier orders awaiting dispatch confirmation and receipt.', time: '1h'
     }] : []),
+    ...(latestTxn ? [{
+      type: 'success', title: `Latest Sale: ${latestTxn.id}`,
+      desc: `Rs ${(latestTxn.total || 0).toLocaleString()} · ${latestTxn.paymentType} · ${latestTxn.branch || 'HQ'}`, time: latestTxn.time || 'Today'
+    }] : []),
     {
-      type: 'info', title: 'Jun 2026 Revenue Projection Updated',
-      desc: 'AI model revised upward to Rs 2.9M based on current velocity.', time: '2h'
-    },
-    {
-      type: 'success', title: 'Payroll Disbursement Complete',
-      desc: 'June 2026 salaries posted to all 5 active employees.', time: 'Today'
+      type: 'info', title: 'Dashboard synced from live database',
+      desc: `${monthlyAnalytics.length} months of data loaded · ${products.length} products tracked`, time: 'Just now'
     },
   ];
 
-  // ── Top Products by Category Revenue ────────────────────────────────────────
-  const topCategories = CATEGORY_DISTRIBUTION.slice(0, 6);
-  const maxCatValue = Math.max(...topCategories.map(c => c.value));
+  // ── Category Distribution (Dynamic) ─────────────────────────────────────────
+  const topCategories = categoryDistribution.slice(0, 6);
+  const maxCatValue = topCategories.length > 0 ? Math.max(...topCategories.map(c => c.value)) : 1;
 
-  // ── Payment Methods Donut ─────────────────────────────────────────────────
-  const totalPaymentValue = PAYMENT_METHOD_SHARE.reduce((s, p) => s + p.value, 0);
+  // ── Payment Methods (Dynamic) ────────────────────────────────────────────────
+  const totalPaymentValue = paymentMethodShare.reduce((s, p) => s + p.value, 0);
 
-  // ── Branch Comparison ─────────────────────────────────────────────────────
-  const branchData = BRANCH_ANALYTICS.map(b => ({
-    name: b.name,
-    Sales: b.sales,
-    Expenses: b.expenses,
-    Profit: b.profit,
-  }));
+  // ── Branch Comparison (Static - single branch system) ────────────────────────
+  const branchData = [
+    { name: 'Karachi HQ', Sales: kpis.totalRevenue, Expenses: kpis.totalExpenses, Profit: kpis.totalProfit }
+  ];
 
   return (
     <div className="space-y-6 animate-fade-in pb-6">
@@ -401,7 +398,7 @@ const calculateTotal = (data, targetStatus) => {
           icon={DollarSign}
           color="indigo"
           trend={+pct(kpis.curMonth?.revenue, kpis.prevMonth?.revenue)}
-          sparkData={MONTHLY_ANALYTICS}
+          sparkData={monthlyAnalytics}
           sparkKey="revenue"
         />
         <MetricCard
@@ -411,7 +408,7 @@ const calculateTotal = (data, targetStatus) => {
           icon={TrendingUp}
           color="emerald"
           trend={+pct(kpis.curMonth?.profit, kpis.prevMonth?.profit)}
-          sparkData={MONTHLY_ANALYTICS}
+          sparkData={monthlyAnalytics}
           sparkKey="profit"
         />
         <MetricCard
@@ -421,7 +418,7 @@ const calculateTotal = (data, targetStatus) => {
           icon={Wallet}
           color="rose"
           trend={-pct(kpis.curMonth?.expenses, kpis.prevMonth?.expenses)}
-          sparkData={MONTHLY_ANALYTICS}
+          sparkData={monthlyAnalytics}
           sparkKey="expenses"
         />
         <MetricCard
@@ -431,7 +428,7 @@ const calculateTotal = (data, targetStatus) => {
           icon={ShoppingCart}
           color="cyan"
           trend={+pct(kpis.curMonth?.transactions, kpis.prevMonth?.transactions)}
-          sparkData={MONTHLY_ANALYTICS}
+          sparkData={monthlyAnalytics}
           sparkKey="transactions"
         />
         <MetricCard
@@ -525,17 +522,19 @@ const calculateTotal = (data, targetStatus) => {
       {/* ── Row 3: Inventory Health + Category Distribution ──────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
 
+      {/* Dynamic Inventory Health Logic */}
+
         {/* Weekly Sales Bar Chart */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-2xl p-5 card-shadow dark:card-shadow-dark">
           <SectionHeader icon={BarChart3} title="Weekly Sales Volume" subtitle="Current week performance by day" />
           <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={WEEKLY_SALES} margin={{ top: 0, right: 0, left: -10, bottom: 0 }}>
+            <BarChart data={weeklySales} margin={{ top: 0, right: 0, left: -10, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(100,116,139,0.08)" vertical={false} />
               <XAxis dataKey="day" tick={{ fontSize: 10, fontWeight: 600 }} axisLine={false} tickLine={false} stroke="#94a3b8" />
               <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} stroke="#94a3b8" tickFormatter={v => fmtK(v)} width={36} />
               <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="sales" name="Sales" radius={[6, 6, 0, 0]} maxBarSize={32}>
-                {WEEKLY_SALES.map((entry, index) => (
+                {weeklySales.map((entry, index) => (
                   <Cell key={index} fill={entry.day === 'Sat' ? '#6366f1' : entry.day === 'Fri' ? '#818cf8' : '#e0e7ff'} className="dark:[fill:#1e3a5f]" />
                 ))}
               </Bar>
@@ -571,7 +570,7 @@ const calculateTotal = (data, targetStatus) => {
             <ResponsiveContainer width={120} height={120}>
               <PieChart>
                 <Pie
-                  data={PAYMENT_METHOD_SHARE}
+                  data={paymentMethodShare}
                   cx="50%"
                   cy="50%"
                   innerRadius={36}
@@ -579,7 +578,7 @@ const calculateTotal = (data, targetStatus) => {
                   paddingAngle={3}
                   dataKey="value"
                 >
-                  {PAYMENT_METHOD_SHARE.map((entry, i) => (
+                  {paymentMethodShare.map((entry, i) => (
                     <Cell key={i} fill={entry.color} />
                   ))}
                 </Pie>
@@ -587,7 +586,7 @@ const calculateTotal = (data, targetStatus) => {
               </PieChart>
             </ResponsiveContainer>
             <div className="flex-1 space-y-2">
-              {PAYMENT_METHOD_SHARE.map((p, i) => (
+              {paymentMethodShare.map((p, i) => (
                 <div key={i} className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: p.color }} />
@@ -631,26 +630,28 @@ const calculateTotal = (data, targetStatus) => {
             </BarChart>
           </ResponsiveContainer>
 
-          {/* Branch Summary Cards */}
-          <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-            {BRANCH_ANALYTICS.map(b => (
-              <div key={b.name} className="bg-slate-50 dark:bg-slate-800/40 rounded-xl p-3">
-                <div className="flex items-center gap-1.5 mb-2">
-                  <Store size={12} className="text-indigo-500" />
-                  <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">{b.name}</span>
+          {/* Branch Summary Card (dynamic from real data) */}
+          <div className="grid grid-cols-1 gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <div className="bg-slate-50 dark:bg-slate-800/40 rounded-xl p-3">
+              <div className="flex items-center gap-1.5 mb-2">
+                <Store size={12} className="text-indigo-500" />
+                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">Karachi HQ</span>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5 text-[10px]">
+                <div>
+                  <p className="text-slate-400 dark:text-slate-500">Revenue</p>
+                  <p className="font-bold text-slate-700 dark:text-slate-300">Rs {fmtK(kpis.totalRevenue)}</p>
                 </div>
-                <div className="grid grid-cols-2 gap-1.5 text-[10px]">
-                  <div>
-                    <p className="text-slate-400 dark:text-slate-500">Revenue</p>
-                    <p className="font-bold text-slate-700 dark:text-slate-300">Rs {fmtK(b.sales)}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-400 dark:text-slate-500">Employees</p>
-                    <p className="font-bold text-slate-700 dark:text-slate-300">{b.employees} staff</p>
-                  </div>
+                <div>
+                  <p className="text-slate-400 dark:text-slate-500">Expenses</p>
+                  <p className="font-bold text-slate-700 dark:text-slate-300">Rs {fmtK(kpis.totalExpenses)}</p>
+                </div>
+                <div>
+                  <p className="text-slate-400 dark:text-slate-500">Profit</p>
+                  <p className="font-bold text-emerald-600 dark:text-emerald-400">Rs {fmtK(kpis.totalProfit)}</p>
                 </div>
               </div>
-            ))}
+            </div>
           </div>
         </div>
 
@@ -671,8 +672,8 @@ const calculateTotal = (data, targetStatus) => {
           <div className="flex items-center gap-6 mb-4">
             <ResponsiveContainer width={100} height={100}>
               <PieChart>
-                <Pie data={STOCK_LEVELS} cx="50%" cy="50%" innerRadius={30} outerRadius={48} paddingAngle={3} dataKey="value">
-                  {STOCK_LEVELS.map((entry, i) => (
+                <Pie data={stockLevels} cx="50%" cy="50%" innerRadius={30} outerRadius={48} paddingAngle={3} dataKey="value">
+                  {stockLevels.map((entry, i) => (
                     <Cell key={i} fill={entry.color} />
                   ))}
                 </Pie>
@@ -761,7 +762,7 @@ const calculateTotal = (data, targetStatus) => {
           },
           {
             title: 'Sales Velocity',
-            value: `${fmtK(MONTHLY_ANALYTICS[MONTHLY_ANALYTICS.length - 1]?.transactions)} txn/mo`,
+            value: `${fmtK(kpis.curMonth?.transactions)} txn/mo`,
             sub: 'Avg monthly transactions',
             icon: Zap,
             color: 'from-amber-500 to-orange-600',
@@ -922,29 +923,26 @@ const calculateTotal = (data, targetStatus) => {
           </div>
         </div>
 
-        {/* System Activity Feed */}
+        {/* System Activity Feed - DYNAMIC from real transactions */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-2xl p-5 card-shadow dark:card-shadow-dark">
-          <SectionHeader icon={Activity} title="Live Activity Feed" subtitle="Recent system events & transactions" />
+          <SectionHeader icon={Activity} title="Live Activity Feed" subtitle={`${recentTransactions.length} recent transactions`} />
           <div className="space-y-3 max-h-56 overflow-y-auto">
-            {[
-              { icon: ShoppingCart, color: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-950/30 dark:text-indigo-400', action: 'POS Sale Completed', detail: 'TXN-024 · Rs 4,850 · Cash · Karachi HQ', time: '2m ago' },
-              { icon: Package, color: 'bg-amber-100 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400', action: 'Stock Alert Triggered', detail: `${kpis.lowStock} items below minimum threshold`, time: '15m ago' },
-              { icon: Truck, color: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400', action: 'Purchase Order Received', detail: 'PO-019 from Unilever Pakistan confirmed', time: '1h ago' },
-              { icon: Users, color: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-950/30 dark:text-cyan-400', action: 'Udhaar Payment Collected', detail: 'Rs 12,000 received from Ahmed Khata', time: '2h ago' },
-              { icon: Calendar, color: 'bg-violet-100 text-violet-600 dark:bg-violet-950/30 dark:text-violet-400', action: 'Monthly Report Generated', detail: 'June 2026 financial summary compiled', time: '3h ago' },
-              { icon: Award, color: 'bg-rose-100 text-rose-600 dark:bg-rose-950/30 dark:text-rose-400', action: 'Expense Voucher Posted', detail: 'EXP-031 · Utilities Rs 28,000 approved', time: '4h ago' },
-            ].map((item, i) => (
-              <div key={i} className="flex items-start gap-3 group hover:bg-slate-50 dark:hover:bg-slate-800/30 rounded-xl px-2 py-1.5 -mx-2 transition-colors">
-                <div className={`p-2 rounded-lg ${item.color} shrink-0 mt-0.5`}>
-                  <item.icon size={12} />
+            {recentTransactions.length > 0 ? recentTransactions.map((txn, i) => (
+              <div key={txn.id || i} className="flex items-start gap-3 group hover:bg-slate-50 dark:hover:bg-slate-800/30 rounded-xl px-2 py-1.5 -mx-2 transition-colors">
+                <div className="p-2 rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-950/30 dark:text-indigo-400 shrink-0 mt-0.5">
+                  <ShoppingCart size={12} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">{item.action}</p>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">{item.detail}</p>
+                  <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">POS Sale — {txn.id}</p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">
+                    Rs {(txn.total || 0).toLocaleString()} · {txn.paymentType} · {txn.customer || 'Walk-In'} · {txn.branch || 'HQ'}
+                  </p>
                 </div>
-                <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0 font-medium">{item.time}</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0 font-medium">{txn.time || txn.date}</span>
               </div>
-            ))}
+            )) : (
+              <div className="text-center py-6 text-slate-400 dark:text-slate-500 text-xs">No recent transactions</div>
+            )}
           </div>
         </div>
       </div>

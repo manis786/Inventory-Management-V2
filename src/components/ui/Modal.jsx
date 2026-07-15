@@ -63,7 +63,7 @@ export function Modal({
                 <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">{title}</h2>
                 <button
                   onClick={onClose}
-                  className="text-slate-400 hover:text-slate-605 dark:hover:text-slate-205 p-1 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md transition-colors cursor-pointer"
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md transition-colors cursor-pointer"
                 >
                   <X className="w-4.5 h-4.5" />
                 </button>

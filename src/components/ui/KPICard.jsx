@@ -15,23 +15,23 @@ export function KPICard({
 }) {
   const colorSchemes = {
     indigo: {
-      iconBg: 'bg-indigo-50 text-indigo-650 dark:bg-indigo-950/40 dark:text-indigo-400',
+      iconBg: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400',
       glow: 'hover:shadow-indigo-500/10 hover:border-indigo-200 dark:hover:border-indigo-950'
     },
     emerald: {
-      iconBg: 'bg-emerald-50 text-emerald-650 dark:bg-emerald-950/40 dark:text-emerald-400',
+      iconBg: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400',
       glow: 'hover:shadow-emerald-500/10 hover:border-emerald-200 dark:hover:border-emerald-950'
     },
     rose: {
-      iconBg: 'bg-rose-50 text-rose-650 dark:bg-rose-950/40 dark:text-rose-400',
+      iconBg: 'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400',
       glow: 'hover:shadow-rose-500/10 hover:border-rose-200 dark:hover:border-rose-950'
     },
     amber: {
-      iconBg: 'bg-amber-50 text-amber-605 dark:bg-amber-950/40 dark:text-amber-400',
+      iconBg: 'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400',
       glow: 'hover:shadow-amber-500/10 hover:border-amber-200 dark:hover:border-amber-950'
     },
     cyan: {
-      iconBg: 'bg-cyan-50 text-cyan-650 dark:bg-cyan-950/40 dark:text-cyan-400',
+      iconBg: 'bg-cyan-50 text-cyan-600 dark:bg-cyan-950/40 dark:text-cyan-400',
       glow: 'hover:shadow-cyan-500/10 hover:border-cyan-200 dark:hover:border-cyan-950'
     }
   };

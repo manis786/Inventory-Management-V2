@@ -24,13 +24,7 @@ export const ROLES = {
 
 export const USERS = [
   { id: 'USR001', name: 'Muhammad Anis', email: 'manees@martpro.pk', username: 'manees.admin', role: 'ADMIN', status: 'active', branch: 'Karachi HQ', phone: '0333-1234567', lastLogin: '2026-06-13 08:30', avatar: '👩‍💼' },
-  { id: 'USR002', name: 'Mohammad Ali', email: 'ali@martpro.pk', username: 'ali.manager', role: 'MANAGER', status: 'active', branch: 'Karachi HQ', phone: '0321-7654321', lastLogin: '2026-06-13 09:00', avatar: '👨‍💼' },
-  { id: 'USR003', name: 'Hamza Mughal', email: 'hamza@martpro.pk', username: 'hamza.lahore', role: 'MANAGER', status: 'active', branch: 'Lahore Branch', phone: '0300-9876543', lastLogin: '2026-06-13 08:45', avatar: '👨‍💼' },
-  { id: 'USR004', name: 'Rahat Jamil', email: 'rahat@martpro.pk', username: 'rahat.cashier1', role: 'CASHIER', status: 'active', branch: 'Karachi HQ', phone: '0345-1239874', lastLogin: '2026-06-13 11:00', avatar: '👨‍💻' },
-  { id: 'USR005', name: 'Sajid Anwar', email: 'sajid@martpro.pk', username: 'sajid.cashier2', role: 'CASHIER', status: 'active', branch: 'Karachi HQ', phone: '0312-4567890', lastLogin: '2026-06-13 13:40', avatar: '👨‍💻' },
-  { id: 'USR006', name: 'Ayesha Omer', email: 'ayesha@martpro.pk', username: 'ayesha.cashier3', role: 'CASHIER', status: 'inactive', branch: 'Lahore Branch', phone: '0322-1122334', lastLogin: '2026-06-10 17:30', avatar: '👩‍💻' },
-  { id: 'USR007', name: 'Sarah Ahmed', email: 'sarah@martpro.pk', username: 'sarah.audit', role: 'AUDITOR', status: 'active', branch: 'Karachi HQ', phone: '0334-9087654', lastLogin: '2026-06-12 10:15', avatar: '👩‍🔬' },
-  { id: 'USR008', name: 'Bilal Siddiqui', email: 'bilal@martpro.pk', username: 'bilal.cashier4', role: 'CASHIER', status: 'active', branch: 'Lahore Branch', phone: '0301-4455667', lastLogin: '2026-06-13 08:50', avatar: '👨‍💻' }
+  { id: 'USR002', name: 'Mohammad Ali', email: 'ali@martpro.pk', username: 'ali.manager', role: 'MANAGER', status: 'active', branch: 'Karachi HQ', phone: '0321-7654321', lastLogin: '2026-06-13 09:00', avatar: '👨‍💼' }
 ];
 
 export const USER_ACTIVITIES = [

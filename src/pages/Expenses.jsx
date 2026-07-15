@@ -190,12 +190,12 @@ export function Expenses() {
   return (
     <div className="space-y-5 animate-fade-in">
       {/* Header section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-100 dark:border-slate-850">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
         <div>
-          <h1 className="text-xl md:text-2xl font-black text-slate-855 dark:text-white tracking-tight">
+          <h1 className="text-xl md:text-2xl font-black text-slate-800 dark:text-white tracking-tight">
             Operating Expenses (OPEX)
           </h1>
-          <p className="text-xs text-slate-405 dark:text-slate-500">
+          <p className="text-xs text-slate-400 dark:text-slate-500">
             Record branch utility bills, custom shopping bags, delivery fuels, and employee payrolls.
           </p>
         </div>
@@ -222,7 +222,7 @@ export function Expenses() {
                 <CardContent className="p-4 space-y-2">
                   <div className="flex justify-between items-center text-xs">
                     <span className="font-bold text-slate-800 dark:text-slate-200">{cat.name}</span>
-                    <span className="font-black text-indigo-650 dark:text-indigo-400">{pct}% used</span>
+                    <span className="font-black text-indigo-600 dark:text-indigo-400">{pct}% used</span>
                   </div>
 
                   <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">

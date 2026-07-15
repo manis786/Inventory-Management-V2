@@ -29,8 +29,8 @@ export function Table({
     <div className={`w-full flex flex-col ${className}`}>
       {/* Table Container */}
       <div className="overflow-x-auto rounded-lg border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-900">
-        <table className="w-full text-left border-collapse text-slate-650 dark:text-slate-300 text-sm">
-          <thead className="bg-slate-50/75 dark:bg-slate-950/40 text-xs font-semibold text-slate-505 dark:text-slate-400 border-b border-slate-200/60 dark:border-slate-800/60 uppercase tracking-wider select-none">
+        <table className="w-full text-left border-collapse text-slate-600 dark:text-slate-300 text-sm">
+          <thead className="bg-slate-50/75 dark:bg-slate-950/40 text-xs font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200/60 dark:border-slate-800/60 uppercase tracking-wider select-none">
             <tr>
               {columns.map((col) => (
                 <th
@@ -48,12 +48,12 @@ export function Table({
                       <span className="text-slate-400">
                         {sortColumn === col.key ? (
                           sortDirection === 'asc' ? (
-                            <ChevronUp className="w-3.5 h-3.5 text-indigo-550 dark:text-indigo-400" />
+                            <ChevronUp className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
                           ) : (
-                            <ChevronDown className="w-3.5 h-3.5 text-indigo-550 dark:text-indigo-400" />
+                            <ChevronDown className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
                           )
                         ) : (
-                          <ChevronsUpDown className="w-3.5 h-3.5 text-slate-350 dark:text-slate-600" />
+                          <ChevronsUpDown className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600" />
                         )}
                       </span>
                     )}
@@ -86,10 +86,10 @@ export function Table({
               data.map((row, rIdx) => (
                 <tr
                   key={row.id || rIdx}
-                  className="hover:bg-slate-50/50 dark:hover:bg-slate-850/20 transition-colors"
+                  className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors"
                 >
                   {columns.map((col) => (
-                    <td key={col.key} className={`px-5 py-3.5 text-slate-700 dark:text-slate-205 align-middle ${col.className || ''}`}>
+                    <td key={col.key} className={`px-5 py-3.5 text-slate-700 dark:text-slate-200 align-middle ${col.className || ''}`}>
                       {col.render ? col.render(row) : row[col.key]}
                     </td>
                   ))}
@@ -104,9 +104,9 @@ export function Table({
       {pagination && totalPages > 1 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 px-1 select-none">
           <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
-            Showing <span className="font-semibold text-slate-855 dark:text-slate-200">{Math.min(totalItems, (currentPage - 1) * itemsPerPage + 1)}</span> to{' '}
-            <span className="font-semibold text-slate-855 dark:text-slate-200">{Math.min(totalItems, currentPage * itemsPerPage)}</span> of{' '}
-            <span className="font-semibold text-slate-855 dark:text-slate-200">{totalItems}</span> results
+            Showing <span className="font-semibold text-slate-800 dark:text-slate-200">{Math.min(totalItems, (currentPage - 1) * itemsPerPage + 1)}</span> to{' '}
+            <span className="font-semibold text-slate-800 dark:text-slate-200">{Math.min(totalItems, currentPage * itemsPerPage)}</span> of{' '}
+            <span className="font-semibold text-slate-800 dark:text-slate-200">{totalItems}</span> results
           </div>
 
           <div className="flex items-center gap-1.5">
@@ -135,8 +135,8 @@ export function Table({
                       className={`
                         w-8 h-8 flex items-center justify-center rounded-md text-xs font-semibold border transition-all cursor-pointer
                         ${currentPage === pageNum
-                          ? 'bg-indigo-650 text-white border-indigo-650 shadow-sm'
-                          : 'bg-white text-slate-600 hover:bg-slate-55 border-slate-200 hover:border-slate-300 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-800 dark:hover:bg-slate-800'
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                          : 'bg-white text-slate-600 hover:bg-slate-50 border-slate-200 hover:border-slate-300 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-800 dark:hover:bg-slate-800'
                         }
                       `}
                     >

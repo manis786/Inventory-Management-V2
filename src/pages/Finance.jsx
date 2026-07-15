@@ -56,7 +56,7 @@ function AccountSearchSelect({ financeAccounts, selectedId, onSelect }) {
 
       {isOpen && (
         <div className="absolute left-0 right-0 mt-1 z-50 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 max-h-52 overflow-y-auto rounded-lg shadow-xl">
-          <div className="p-2 border-b border-slate-100 dark:border-slate-850 sticky top-0 bg-white dark:bg-slate-950 flex items-center gap-1.5">
+          <div className="p-2 border-b border-slate-100 dark:border-slate-800 sticky top-0 bg-white dark:bg-slate-950 flex items-center gap-1.5">
             <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             <input 
               type="text"
@@ -68,7 +68,7 @@ function AccountSearchSelect({ financeAccounts, selectedId, onSelect }) {
             />
             {searchTerm && (
               <button type="button" onClick={() => setSearchTerm('')}>
-                <X className="w-3 h-3 text-slate-400 hover:text-slate-650" />
+                <X className="w-3 h-3 text-slate-400 hover:text-slate-600" />
               </button>
             )}
           </div>
@@ -86,7 +86,7 @@ function AccountSearchSelect({ financeAccounts, selectedId, onSelect }) {
                   className={`p-2 text-left rounded-md cursor-pointer transition-colors text-[11px] flex justify-between items-center ${
                     selectedId === acc.id 
                       ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400 font-bold' 
-                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850'
+                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
                 >
                   <div>
@@ -137,14 +137,14 @@ function RowActionMenu({ row, onAction }) {
           <button 
             type="button"
             onClick={() => { onAction('view', row); setMenuOpen(false); }}
-            className="w-full flex items-center gap-2 p-1.5 text-left rounded hover:bg-slate-50 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 cursor-pointer"
+            className="w-full flex items-center gap-2 p-1.5 text-left rounded hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer"
           >
             <Eye className="w-3.5 h-3.5 text-blue-500" /> View Source
           </button>
           <button 
             type="button"
             onClick={() => { onAction('edit', row); setMenuOpen(false); }}
-            className="w-full flex items-center gap-2 p-1.5 text-left rounded hover:bg-slate-50 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 cursor-pointer"
+            className="w-full flex items-center gap-2 p-1.5 text-left rounded hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer"
           >
             <Edit3 className="w-3.5 h-3.5 text-amber-500" /> Edit Entry
           </button>
@@ -288,7 +288,7 @@ export function Finance() {
   return (
     <div className="space-y-5 animate-fade-in relative">
       {/* Upper Context Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-100 dark:border-slate-850">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
         <div>
           <h1 className="text-xl md:text-2xl font-black text-slate-800 dark:text-white tracking-tight flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-indigo-600" /> General Ledger Journal
@@ -306,7 +306,7 @@ export function Finance() {
       </div>
 
       {/* DOUBLE-ENTRY JOURNAL (GL ENTRIES GRID ONLY) */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-850 rounded-xl p-4 shadow-sm">
+      <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl p-4 shadow-sm">
         <Table
           columns={jeColumns}
           data={paginatedJE}
@@ -329,9 +329,9 @@ export function Finance() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in no-print">
           <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
             
-            <div className="px-6 py-4 border-b border-slate-150 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950/20">
+            <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950/20">
               <div>
-                <h2 className="text-base font-black text-slate-855 dark:text-white flex items-center gap-2">
+                <h2 className="text-base font-black text-slate-800 dark:text-white flex items-center gap-2">
                   <Scale className="w-5 h-5 text-indigo-600" /> Create Double-Entry Accounting Voucher
                 </h2>
                 <p className="text-[11px] text-slate-400">Add systematic journal debits and credits. System requires mathematical ledger equilibrium.</p>
@@ -346,7 +346,7 @@ export function Finance() {
 
             <form onSubmit={handleVoucherSubmit} className="flex-1 overflow-y-auto p-6 space-y-5 text-xs">
               
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-slate-50/50 dark:bg-slate-850/10 p-4 rounded-lg border border-slate-100 dark:border-slate-850">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-slate-50/50 dark:bg-slate-800/10 p-4 rounded-lg border border-slate-100 dark:border-slate-800">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1.5">Voucher System Type</label>
                   <select 

@@ -3,6 +3,7 @@ import Sidebar from './Sidebar';
 import TopNav from './TopNav';
 import { ToastContainer } from '../ui/Toast';
 import { useApp } from '../../context/AppContext';
+import { AIAssistant } from '../ai/AIAssistant';
 
 export function AppShell({ children }) {
   const { sidebarCollapsed } = useApp();
@@ -22,6 +23,9 @@ export function AppShell({ children }) {
 
       {/* Global Toast Alert notifications */}
       <ToastContainer />
+
+      {/* 🤖 AI Assistant — floating on all pages */}
+      <AIAssistant />
     </div>
   );
 }

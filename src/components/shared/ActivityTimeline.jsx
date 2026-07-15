@@ -8,14 +8,14 @@ export function ActivityTimeline({ activities = [], className = '' }) {
       case 'System Login':
         return <div className="p-1.5 rounded-lg bg-indigo-500">{<Key className={iconStyles} />}</div>;
       case 'Settings':
-        return <div className="p-1.5 rounded-lg bg-slate-550">{<Settings className={iconStyles} />}</div>;
+        return <div className="p-1.5 rounded-lg bg-slate-500">{<Settings className={iconStyles} />}</div>;
       case 'Products':
       case 'POS Sales':
         return <div className="p-1.5 rounded-lg bg-emerald-500">{<ShoppingBag className={iconStyles} />}</div>;
       case 'Inventory':
         return <div className="p-1.5 rounded-lg bg-amber-500">{<AlertCircle className={iconStyles} />}</div>;
       default:
-        return <div className="p-1.5 rounded-lg bg-indigo-650">{<User className={iconStyles} />}</div>;
+        return <div className="p-1.5 rounded-lg bg-indigo-600">{<User className={iconStyles} />}</div>;
     }
   };
 
@@ -37,14 +37,14 @@ export function ActivityTimeline({ activities = [], className = '' }) {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-4">
-                    <p className="text-xs font-bold text-slate-805 dark:text-slate-200">
+                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
                       {activity.userName || activity.user || 'System User'}
                     </p>
                     <span className="text-[10px] text-slate-400 dark:text-slate-500 whitespace-nowrap">
                       {activity.time || activity.date}
                     </span>
                   </div>
-                  <div className="mt-1 text-xs text-slate-650 dark:text-slate-350">
+                  <div className="mt-1 text-xs text-slate-600 dark:text-slate-300">
                     <span className="font-semibold text-slate-800 dark:text-slate-200">
                       {activity.action}
                     </span>{' '}

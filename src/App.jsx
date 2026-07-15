@@ -19,6 +19,9 @@ import Expenses from './pages/Expenses';
 import Reports from './pages/Reports';
 import UsersRoles from './pages/UsersRoles';
 import Settings from './pages/Settings';
+import  {FinanceDashboard}  from './pages/FinanceDashboard';
+import { ChartOfAccounts } from './pages/chartofAccounts';
+
 
 // Login Page Import
 import Login from './pages/Login';
@@ -63,6 +66,10 @@ const isAuthenticated = !!localStorage.getItem('token');
         return <Suppliers />;
       case 'Customers':
         return <Customers />;
+        case 'Finance Dashboard':
+          return <FinanceDashboard/>
+        case 'Chart of Accounts':
+          return <ChartOfAccounts/>
       case 'Finance':
         return <Finance />;
       case 'Expenses':

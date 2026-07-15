@@ -192,10 +192,10 @@ const foundCategory = categories.find(c => String(c._id) === String(productCatId
         <button
           key={idx}
           onClick={() => setCurrentPage(p)}
-          className={`w-10 h-10 border rounded transition-all ${
+          className={`w-10 h-10 border rounded transition-all cursor-pointer ${
             currentPage === p 
-              ? 'bg-[#17a2b8] text-white border-[#17a2b8]' 
-              : 'bg-white text-slate-600 border-slate-300 hover:border-[#17a2b8]'
+              ? 'bg-indigo-600 text-white border-indigo-600' 
+              : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-600'
           }`}
         >
           {p}

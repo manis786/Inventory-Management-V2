@@ -1,6 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { ACCOUNTS, JOURNAL_ENTRIES } from '../data/finance';
+import { EXPENSES } from '../data/expenses';
+import { TRANSACTIONS } from '../data/transactions';
+import { USERS } from '../data/users';
+import { STORE_INFO } from '../data/store';
 
 const AppContext = createContext();
 
@@ -14,10 +19,19 @@ export function AppProvider({ children }) {
   const [activeModule, setActiveModule] = useState('Dashboard');
   const [activeReport, setActiveReport] = useState(null);
   const [movements, setMovements] = useState([]);
-  const [user, setUser] = useState(null)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [toasts, setToasts] = useState([]);
   const [sales, setSales] = useState([]);
+
+  // --- Missing / Custom States ---
+  const [financeAccounts, setFinanceAccounts] = useState(ACCOUNTS);
+  const [journalEntries, setJournalEntries] = useState(JOURNAL_ENTRIES);
+  const [expenses, setExpenses] = useState(EXPENSES);
+  const [transactions, setTransactions] = useState(TRANSACTIONS);
+  const [users, setUsers] = useState(USERS);
+  const [currentUser, setCurrentUser] = useState(USERS[0]);
+  const [storeSettings, setStoreSettings] = useState(STORE_INFO);
 
 
   // --- Cart States (POS) ---
@@ -159,6 +173,18 @@ const login = async (email, password) => {
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('isLoggedIn', 'true');
         setIsAuthenticated(true);
+        const found = USERS.find(u => u.email === email);
+        if (found) {
+          setCurrentUser(found);
+        } else {
+          setCurrentUser({
+            id: 'USR001',
+            name: 'Muhammad Anis',
+            email: email,
+            role: 'ADMIN',
+            branch: 'Karachi HQ'
+          });
+        }
         return true; 
       }
       return false;
@@ -174,6 +200,7 @@ const logout = () => {
   localStorage.removeItem('isLoggedIn');
   setIsAuthenticated(false);
   setUser(null);
+  setCurrentUser(null);
 };
 const addMovement = async (movementData) => {
   try {
@@ -211,7 +238,59 @@ const addMovement = async (movementData) => {
     fetchPurchases();
     fetchCustomers();
     fetchSales();
+
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    if (isLoggedIn) {
+      setIsAuthenticated(true);
+      setCurrentUser(USERS[0]);
+    }
   }, []);
+
+  // --- Missing / Custom Handlers ---
+  const addExpense = (expenseData) => {
+    const newExp = { id: `EXP${String(expenses.length + 1).padStart(3, '0')}`, ...expenseData, amount: Number(expenseData.amount) };
+    setExpenses(prev => [newExp, ...prev]);
+    addToast('Expense recorded successfully!', 'success');
+  };
+
+  const deleteExpense = (id) => {
+    setExpenses(prev => prev.filter(e => e.id !== id));
+    addToast('Expense deleted successfully!', 'success');
+  };
+
+  const saveStoreSettings = async (settings) => {
+    setStoreSettings(settings);
+    addToast('Store settings saved successfully!', 'success');
+  };
+
+  const addUser = (userData) => {
+    const newUser = { id: `USR${String(users.length + 1).padStart(3, '0')}`, ...userData };
+    setUsers(prev => [...prev, newUser]);
+    addToast('User added successfully!', 'success');
+  };
+
+  const updateUser = (userData) => {
+    setUsers(prev => prev.map(u => u.id === userData.id ? userData : u));
+    addToast('User updated successfully!', 'success');
+  };
+
+  const loginAsUser = (userId) => {
+    const foundUser = users.find(u => u.id === userId);
+    if (foundUser) {
+      setCurrentUser(foundUser);
+      addToast(`Switched login session to: ${foundUser.name}`, 'success');
+    }
+  };
+
+  const updateSupplier = (supplierData) => {
+    setSuppliers(prev => prev.map(s => s._id === supplierData._id ? supplierData : s));
+    addToast('Supplier updated successfully!', 'success');
+  };
+
+  const addSupplierPayment = (supplierId, amount, method) => {
+    setSuppliers(prev => prev.map(s => s._id === supplierId ? { ...s, balance: Math.max(0, s.balance - amount) } : s));
+    addToast(`Payment of Rs. ${amount.toLocaleString()} recorded via ${method}!`, 'success');
+  };
 
   return (
     <AppContext.Provider value={{
@@ -232,7 +311,14 @@ const addMovement = async (movementData) => {
       addToast,
       login,
       sales, setSales, addSale, fetchSales,
-      logout
+      logout,
+      financeAccounts, setFinanceAccounts,
+      journalEntries, setJournalEntries,
+      expenses, setExpenses, addExpense, deleteExpense,
+      transactions, setTransactions,
+      users, setUsers, addUser, updateUser, loginAsUser, currentUser,
+      storeSettings, setStoreSettings, saveStoreSettings,
+      updateSupplier, addSupplierPayment
     }}>
       {children}
     </AppContext.Provider>

@@ -69,12 +69,12 @@ export function Settings() {
   return (
     <div className="space-y-6 max-w-4xl mx-auto animate-fade-in">
       {/* Header section */}
-      <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-850">
+      <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-800">
         <div>
-          <h1 className="text-xl md:text-2xl font-black text-slate-855 dark:text-white tracking-tight">
+          <h1 className="text-xl md:text-2xl font-black text-slate-800 dark:text-white tracking-tight">
             ERP Settings & Controls
           </h1>
-          <p className="text-xs text-slate-405 dark:text-slate-500">
+          <p className="text-xs text-slate-400 dark:text-slate-500">
             Configure supermarket metadata, adjust default retail taxes, and configure outlets.
           </p>
         </div>
@@ -164,10 +164,10 @@ export function Settings() {
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
                   {storeSettings.branches.map((b) => (
-                    <tr key={b.id} className="text-slate-707 dark:text-slate-205">
+                    <tr key={b.id} className="text-slate-700 dark:text-slate-200">
                       <td className="p-3 font-bold font-mono">{b.id}</td>
                       <td className="p-3 font-semibold">{b.name}</td>
-                      <td className="p-3 text-slate-455">{b.address}</td>
+                      <td className="p-3 text-slate-400">{b.address}</td>
                       <td className="p-3">
                         <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
                           b.isActive

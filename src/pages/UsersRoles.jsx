@@ -119,8 +119,8 @@ export function UsersRoles() {
               ? 'bg-indigo-50 border-indigo-200 text-indigo-700 dark:bg-indigo-950/20 dark:text-indigo-400'
               : row.role === 'CASHIER'
                 ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400'
-                : 'bg-cyan-55 border-cyan-200 text-cyan-700 dark:bg-cyan-950/20 dark:text-cyan-400'
-        }`}>
+                : 'bg-cyan-50 border-cyan-200 text-cyan-700 dark:bg-cyan-950/20 dark:text-cyan-400'
+        }`}>,StartLine:122,TargetContent:
           {row.role}
         </span>
       )
@@ -153,7 +153,7 @@ export function UsersRoles() {
           <Button
             variant="ghost"
             size="sm"
-            className="py-1 px-2 text-xs font-bold text-indigo-650 hover:underline cursor-pointer"
+            className="py-1 px-2 text-xs font-bold text-indigo-600 hover:underline cursor-pointer"
             onClick={() => loginAsUser(row.id)}
           >
             Masquerade
@@ -168,12 +168,12 @@ export function UsersRoles() {
   return (
     <div className="space-y-5 animate-fade-in">
       {/* Header section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-100 dark:border-slate-850">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
         <div>
-          <h1 className="text-xl md:text-2xl font-black text-slate-855 dark:text-white tracking-tight">
+          <h1 className="text-xl md:text-2xl font-black text-slate-800 dark:text-white tracking-tight">
             Security, Users & Roles
           </h1>
-          <p className="text-xs text-slate-405 dark:text-slate-500">
+          <p className="text-xs text-slate-400 dark:text-slate-500">
             Define system credentials, set granular screen permissions, and audit user logs.
           </p>
         </div>
@@ -213,7 +213,7 @@ export function UsersRoles() {
       {/* PERMISSIONS MATRIX */}
       {activeTab === 'matrix' && (
         <Card className="max-w-3xl mx-auto overflow-hidden">
-          <CardHeader className="bg-slate-50 dark:bg-slate-950/20 border-b border-slate-100 dark:border-slate-805">
+          <CardHeader className="bg-slate-50 dark:bg-slate-950/20 border-b border-slate-100 dark:border-slate-800">
             <CardTitle>Role Access Control Matrix (RBAC)</CardTitle>
           </CardHeader>
           <CardContent className="p-0 overflow-x-auto">
@@ -229,7 +229,7 @@ export function UsersRoles() {
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
                 {modules.map((mod) => (
-                  <tr key={mod} className="hover:bg-slate-50 dark:hover:bg-slate-800/20 text-slate-707 dark:text-slate-205">
+                  <tr key={mod} className="hover:bg-slate-50 dark:hover:bg-slate-800/20 text-slate-700 dark:text-slate-200">
                     <td className="p-4 font-bold">{mod}</td>
                     {['ADMIN', 'MANAGER', 'CASHIER', 'AUDITOR'].map((role) => {
                       const hasAccess = roleHasAccess(role, mod);

@@ -826,6 +826,154 @@ app.put('/api/settings', async (req, res) => {
   }
 });
 
+// ==========================================
+// 12. DASHBOARD SUMMARY ROUTE (DYNAMIC)
+// ==========================================
+app.get('/api/dashboard/summary', async (req, res) => {
+  try {
+    // Fetch all required data in parallel
+    const [products, customers, suppliers, purchases, transactions, expenses] = await Promise.all([
+      models.Product.find({}),
+      models.Customer.find({}),
+      models.Supplier.find({}),
+      models.PurchaseOrder.find({}).sort({ date: -1 }),
+      models.Transaction.find({}).sort({ date: -1 }),
+      models.Expense.find({ status: 'Paid' })
+    ]);
+
+    // ── Monthly Analytics (last 6 months from today) ────────────────────────
+    const monthlyMap = {};
+    const now = new Date();
+    
+    // Initialize last 6 months
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const label = d.toLocaleString('en-PK', { month: 'short', year: 'numeric' });
+      monthlyMap[key] = { month: label, revenue: 0, profit: 0, expenses: 0, transactions: 0 };
+    }
+
+    // Add transaction revenue & compute profit (revenue - COGS)
+    transactions.forEach(txn => {
+      if (!txn.date) return;
+      const key = txn.date.slice(0, 7); // YYYY-MM
+      if (!monthlyMap[key]) return;
+      const revenue = txn.total || 0;
+      const cogs = (txn.items || []).reduce((s, item) => s + ((item.costPrice || 0) * (item.qty || 0)), 0);
+      monthlyMap[key].revenue += revenue;
+      monthlyMap[key].profit += (revenue - cogs);
+      monthlyMap[key].transactions += 1;
+    });
+
+    // Add expenses per month
+    expenses.forEach(exp => {
+      if (!exp.date) return;
+      const key = exp.date.slice(0, 7);
+      if (!monthlyMap[key]) return;
+      monthlyMap[key].expenses += (exp.amount || 0);
+    });
+
+    // Recalculate profit = revenue - expenses (operating profit)
+    Object.values(monthlyMap).forEach(m => {
+      m.profit = Math.max(0, m.revenue - m.expenses);
+    });
+
+    const monthlyAnalytics = Object.values(monthlyMap);
+
+    // ── Weekly Sales (last 7 days) ───────────────────────────────────────────
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const weeklyMap = {};
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      const dayName = dayNames[d.getDay()];
+      weeklyMap[dateStr] = { day: dayName, sales: 0, count: 0 };
+    }
+    transactions.forEach(txn => {
+      if (weeklyMap[txn.date]) {
+        weeklyMap[txn.date].sales += (txn.total || 0);
+        weeklyMap[txn.date].count += 1;
+      }
+    });
+    const weeklySales = Object.values(weeklyMap);
+
+    // ── Category Distribution (from transaction items) ───────────────────────
+    // Build productId -> category map
+    const productCatMap = {};
+    products.forEach(p => { productCatMap[p.id] = p.category || 'Others'; });
+    
+    // Map category name -> color
+    const categoryColors = [
+      '#3b82f6', '#06b6d4', '#f59e0b', '#eab308', '#a3a3a3',
+      '#ec4899', '#8b5cf6', '#d97706', '#38bdf8', '#6b7280',
+      '#10b981', '#ef4444', '#f97316', '#84cc16', '#14b8a6'
+    ];
+    const catRevMap = {};
+    transactions.forEach(txn => {
+      (txn.items || []).forEach(item => {
+        const cat = productCatMap[item.productId] || 'Others';
+        catRevMap[cat] = (catRevMap[cat] || 0) + ((item.price || 0) * (item.qty || 0));
+      });
+    });
+    const categoryDistribution = Object.entries(catRevMap)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([name, value], i) => ({ name, value, color: categoryColors[i % categoryColors.length] }));
+
+    // ── Payment Method Share ─────────────────────────────────────────────────
+    const paymentColors = { Cash: '#10b981', Card: '#3b82f6', 'UPI/JazzCash': '#f59e0b', EasyPaisa: '#f97316', Udhaar: '#ef4444', Credit: '#8b5cf6', Mobile: '#06b6d4' };
+    const payMap = {};
+    transactions.forEach(txn => {
+      const pt = txn.paymentType || 'Cash';
+      payMap[pt] = (payMap[pt] || 0) + (txn.total || 0);
+    });
+    const paymentMethodShare = Object.entries(payMap)
+      .sort((a, b) => b[1] - a[1])
+      .map(([name, value]) => ({ name, value, color: paymentColors[name] || '#6b7280' }));
+
+    // ── Stock Levels ─────────────────────────────────────────────────────────
+    const inStock = products.filter(p => p.stock > (p.minStock || 10)).length;
+    const lowStock = products.filter(p => p.stock > 0 && p.stock <= (p.minStock || 10)).length;
+    const outStock = products.filter(p => p.stock === 0).length;
+    const stockLevels = [
+      { name: 'In Stock', value: inStock, color: '#10b981' },
+      { name: 'Low Stock', value: lowStock, color: '#f59e0b' },
+      { name: 'Out of Stock', value: outStock, color: '#ef4444' }
+    ];
+
+    // ── Recent Transactions for Activity Feed ────────────────────────────────
+    const recentTransactions = transactions.slice(0, 10).map(txn => ({
+      id: txn.id,
+      date: txn.date,
+      time: txn.time,
+      total: txn.total,
+      paymentType: txn.paymentType,
+      customer: txn.customer,
+      cashier: txn.cashier,
+      branch: txn.branch
+    }));
+
+    res.json({
+      products,
+      customers,
+      suppliers,
+      purchases,
+      sales: transactions,
+      // Analytics (computed dynamically)
+      monthlyAnalytics,
+      weeklySales,
+      categoryDistribution,
+      paymentMethodShare,
+      stockLevels,
+      recentTransactions,
+    });
+  } catch (err) {
+    console.error('Dashboard summary error:', err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // Start Server
 app.listen(PORT, () => {
   console.log(`Backend server is running on http://localhost:${PORT}`);

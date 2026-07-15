@@ -73,6 +73,8 @@ export function Sidebar() {
     {
       title: 'Finance & Governance',
       items: [
+        { name: 'Finance Dashboard', icon: PieChart },
+        { name: 'Chart of Accounts', icon: BookOpen },
         { name: 'Finance', icon: Wallet },
         {
           name: 'Finance Reports', icon: BarChart3, hasSubmenu: true, submenuKey: 'finance_reports',
