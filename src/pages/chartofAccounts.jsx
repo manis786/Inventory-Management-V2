@@ -1,15 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Folder, FileText, PlusCircle, Edit, RefreshCw } from 'lucide-react';
+import { Folder, FileText, PlusCircle, Edit, RefreshCw, ChevronDown, ChevronRight, Trash2, FolderOpen } from 'lucide-react';
 import toast from 'react-hot-toast'; 
+import Swal from 'sweetalert2';
 
 // Sahi Named Import jo upper wali file se match karta hai
 import { AccountModal } from '../components/ui/AccountModal';
+import { EditAccountModal } from '../components/ui/EditAccountModal';
 
 export const ChartOfAccounts = () => {
     const [accounts, setAccounts] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false); // Modal state defined!
+    const [isModalOpen, setIsModalOpen] = useState(false); // Create Modal state
+    
+    // Nayi States Edit aur Expand/Collapse ke liye
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [accountToEdit, setAccountToEdit] = useState(null);
+    const [expandedNodes, setExpandedNodes] = useState({});
 
     // Backend API URL
     const API_URL = 'http://localhost:5000/api/finance/coa';
@@ -33,27 +40,152 @@ export const ChartOfAccounts = () => {
         fetchAccounts();
     }, []);
 
-    const renderAccountNode = (node) => (
-        <div key={node._id} className="pl-6 py-1">
-            <div className="flex items-center justify-between group p-2 hover:bg-slate-50 rounded-lg transition">
-                <div className="flex items-center gap-3">
-                    {node.isGroup ? <Folder size={18} className="text-indigo-500" /> : <FileText size={18} className="text-slate-400" />}
-                    <span className="font-mono text-xs font-bold text-slate-500">{node.code}</span>
-                    <span className="text-sm text-slate-700 font-medium">{node.name}</span>
+    // ==========================================
+    // 📂 EXPAND / COLLAPSE LOGIC
+    // ==========================================
+    const toggleNode = (nodeId) => {
+        setExpandedNodes(prev => ({
+            ...prev,
+            [nodeId]: !prev[nodeId]
+        }));
+    };
+
+    // Saare Group accounts ko recursively dhoond kar expand karne ka function
+    const expandAll = () => {
+        const tempExpanded = {};
+        const extractGroups = (nodes) => {
+            nodes.forEach(node => {
+                if (node.isGroup) {
+                    tempExpanded[node._id] = true;
+                }
+                if (node.children && node.children.length > 0) {
+                    extractGroups(node.children);
+                }
+            });
+        };
+        extractGroups(accounts);
+        setExpandedNodes(tempExpanded);
+    };
+
+    const collapseAll = () => {
+        setExpandedNodes({});
+    };
+
+    // ==========================================
+    // 🛡️ DELETE ACCOUNT LOGIC WITH SWAL
+    // ==========================================
+    const handleDelete = async (node) => {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: `Do you want to delete "${node.name}"? This action cannot be undone.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#4f46e5', // Indigo-600
+            cancelButtonColor: '#f43f5e',  // Rose-500
+            confirmButtonText: 'Yes, delete it!'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    const response = await axios.delete(`${API_URL}/delete/${node._id}`);
+                    if (response.data.success) {
+                        toast.success("Account deleted successfully!");
+                        fetchAccounts(); // Refresh Tree
+                    }
+                } catch (err) {
+                    // Backend se aane wala Transaction Blocked message yahan toast hoga
+                    toast.error(err.response?.data?.message || "Failed to delete account");
+                }
+            }
+        });
+    };
+
+    // ==========================================
+    // 📝 EDIT ACCOUNTS MODAL TOGGLE
+    // ==========================================
+    const handleEditClick = (node) => {
+        setAccountToEdit(node);
+        setIsEditModalOpen(true);
+    };
+
+    // Recursive Tree Rendering Logic (Purana dynamic layout)
+    const renderAccountNode = (node) => {
+        const isExpanded = expandedNodes[node._id];
+
+        return (
+            <div key={node._id} className="pl-6 py-1">
+                <div 
+                    onClick={() => node.isGroup && toggleNode(node._id)}
+                    className="flex items-center justify-between group p-2 hover:bg-slate-50 rounded-lg transition cursor-pointer"
+                >
+                    <div className="flex items-center gap-3">
+                        {/* Expand/Collapse Arrows for Group Nodes */}
+                        {node.isGroup ? (
+                            isExpanded ? <ChevronDown size={14} className="text-slate-400" /> : <ChevronRight size={14} className="text-slate-400" />
+                        ) : (
+                            <span className="w-[14px]" /> // Align files with folder indicators
+                        )}
+
+                        {/* Folder indicator changes when open */}
+                        {node.isGroup ? (
+                            isExpanded ? <FolderOpen size={18} className="text-indigo-500" /> : <Folder size={18} className="text-indigo-500" />
+                        ) : (
+                            <FileText size={18} className="text-slate-400" />
+                        )}
+                        
+                        <span className="font-mono text-xs font-bold text-slate-500">{node.code}</span>
+                        <span className="text-sm text-slate-700 font-medium">{node.name}</span>
+                    </div>
+
+                    {/* Action Buttons Container (Hover Magic) */}
+                    <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-opacity">
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); handleEditClick(node); }}
+                            className="p-1 hover:bg-slate-200 text-slate-500 hover:text-indigo-600 rounded transition"
+                            title="Edit Account"
+                        >
+                            <Edit size={14} />
+                        </button>
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); handleDelete(node); }}
+                            className="p-1 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded transition"
+                            title="Delete Account"
+                        >
+                            <Trash2 size={14} />
+                        </button>
+                    </div>
                 </div>
-                <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-200 rounded">
-                    <Edit size={14} className="text-slate-500" />
-                </button>
+
+                {/* Children render condition checks mapping */}
+                {node.isGroup && isExpanded && node.children?.map((child) => renderAccountNode(child))}
             </div>
-            {node.children?.map((child) => renderAccountNode(child))}
-        </div>
-    );
+        );
+    };
 
     return (
         <div className="max-w-4xl mx-auto p-6 bg-white rounded-2xl shadow-sm border border-slate-100">
             {/* Header section */}
             <div className="flex justify-between items-center mb-6">
-                <h2 className="text-lg font-bold text-slate-800">Chart of Accounts</h2>
+                <div className="flex items-center gap-4">
+                    <h2 className="text-lg font-bold text-slate-800">Chart of Accounts</h2>
+                    {/* Expand & Collapse Utilities */}
+                    {accounts.length > 0 && !loading && (
+                        <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-100">
+                            <button 
+                                onClick={expandAll}
+                                className="text-[10px] font-black text-indigo-600 hover:bg-indigo-50 px-2.5 py-1.5 rounded-lg transition"
+                            >
+                                📂 Expand All
+                            </button>
+                            <button 
+                                onClick={collapseAll}
+                                className="text-[10px] font-black text-slate-500 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg transition"
+                            >
+                                📁 Collapse All
+                            </button>
+                        </div>
+                    )}
+                </div>
+
                 <div className="flex gap-2">
                     <button onClick={fetchAccounts} className="p-2 text-slate-400 hover:text-indigo-600">
                         <RefreshCw size={16} />
@@ -87,10 +219,18 @@ export const ChartOfAccounts = () => {
                 </div>
             )}
 
-            {/* Account Modal Component */}
+            {/* Account Modal Component (Create Entry) */}
             <AccountModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
+                onRefresh={fetchAccounts}
+            />
+
+            {/* Edit Account Modal Component (Update Entry) */}
+            <EditAccountModal
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                account={accountToEdit}
                 onRefresh={fetchAccounts}
             />
         </div>
