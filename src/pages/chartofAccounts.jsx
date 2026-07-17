@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios'; // Axios import
+import axios from 'axios';
 import { Folder, FileText, PlusCircle, Edit, RefreshCw } from 'lucide-react';
-import toast from 'react-hot-toast'; // Agar tumne toast lagaya hai
-import { AccountModal } from '../components/ui/AccountModal'
+import toast from 'react-hot-toast'; 
+
+// Sahi Named Import jo upper wali file se match karta hai
+import { AccountModal } from '../components/ui/AccountModal';
+
 export const ChartOfAccounts = () => {
     const [accounts, setAccounts] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false); // Modal state defined!
 
-    // Backend API URL - Change if your port is different
+    // Backend API URL
     const API_URL = 'http://localhost:5000/api/finance/coa';
 
     const fetchAccounts = async () => {
@@ -47,17 +50,17 @@ export const ChartOfAccounts = () => {
     );
 
     return (
-
         <div className="max-w-4xl mx-auto p-6 bg-white rounded-2xl shadow-sm border border-slate-100">
+            {/* Header section */}
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-lg font-bold text-slate-800">Chart of Accounts</h2>
                 <div className="flex gap-2">
-                    <button onClick={fetchAccounts} className="p-2 text-slate-400 hover:text-indigo-600"><RefreshCw size={16} /></button>
-                    <button
-                        onClick={() => {
-                            console.log("Button clicked, opening modal..."); // Check karne ke liye
-                            setIsModalOpen(true);
-                        }}
+                    <button onClick={fetchAccounts} className="p-2 text-slate-400 hover:text-indigo-600">
+                        <RefreshCw size={16} />
+                    </button>
+                    {/* Fixed button with correct onClick placement */}
+                    <button 
+                        onClick={() => setIsModalOpen(true)}
                         className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-700"
                     >
                         <PlusCircle size={14} /> Add Account
@@ -65,25 +68,31 @@ export const ChartOfAccounts = () => {
                 </div>
             </div>
 
+            {/* List or Loader */}
             {loading ? (
                 <div className="text-center p-10 text-slate-400">Loading Accounts...</div>
             ) : accounts.length === 0 ? (
-                // Yeh part "No Data" handle karega
                 <div className="text-center p-10 text-slate-500 font-medium">
                     <p>No accounts created yet.</p>
-                    <button className="text-indigo-600 font-bold underline mt-2">Create First Account</button>
+                    <button 
+                        onClick={() => setIsModalOpen(true)} 
+                        className="text-indigo-600 font-bold underline mt-2"
+                    >
+                        Create First Account
+                    </button>
                 </div>
             ) : (
                 <div className="divide-y divide-slate-50">
                     {accounts.map((acc) => renderAccountNode(acc))}
                 </div>
             )}
+
+            {/* Account Modal Component */}
             <AccountModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onRefresh={fetchAccounts}
             />
         </div>
-
     );
 };
