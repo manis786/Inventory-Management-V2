@@ -89,14 +89,14 @@ console.log("Items to process:", selectedPO.items);
     { key: 'supplierName', label: 'Supplier', render: (row) => <span>{row.supplier?.name}</span> },
     { key: 'totalAmount', label: 'Total', render: (row) => <span>{formatPKR(row.totalAmount)}</span> },
     { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
-    { key: 'action', label: 'Action', render: (row) => (
-      <select disabled={row.status === 'Approved'} value={row.status} onChange={(e) => handlePurchaseStatusChange(row._id, e.target.value)} className="border p-1 text-xs">
-        <option value="Pending">Pending</option>
-        <option value="Approved">Approved</option>
-        <option value="Hold">Hold</option>
-        <option value="Rejected">Rejected</option>
-      </select>
-    )},
+    // { key: 'action', label: 'Action', render: (row) => (
+    //   <select disabled={row.status === 'Approved'} value={row.status} onChange={(e) => handlePurchaseStatusChange(row._id, e.target.value)} className="border p-1 text-xs">
+    //     <option value="Pending">Pending</option>
+    //     <option value="Approved">Approved</option>
+    //     <option value="Hold">Hold</option>
+    //     <option value="Rejected">Rejected</option>
+    //   </select>
+    // )},
     { key: 'details', label: '', render: (row) => <Button icon={Eye} size="sm" onClick={() => { setSelectedPO(row); setDetailModalOpen(true); }} /> }
   ];
 

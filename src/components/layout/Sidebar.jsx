@@ -6,7 +6,7 @@ import {
   ChevronDown, Scale, FileText, TrendingUp, PackageCheck, History, BookOpen, 
   RefreshCw, Coins, PieChart, Clock, FileX, PackageSearch, BarChart4, 
   TrendingDown, Award, AlertTriangle, Landmark, BadgePercent, ArrowRightLeft, 
-  Briefcase, FileSpreadsheet, ArrowRight, ShieldCheck, Sliders, Contact2, UserCheck
+  Briefcase, FileSpreadsheet, Contact2, UserCheck, ShoppingCartIcon
 } from 'lucide-react';
 
 export function Sidebar() {
@@ -34,7 +34,7 @@ export function Sidebar() {
         { name: 'POS Sales', icon: Calculator },
         { name: 'Credit Sales', icon: FileSpreadsheet },
         { name: 'Products', icon: ShoppingBag },
-        { name: 'Categories', icon: Layers }, // Naya Add kiya
+        { name: 'Categories', icon: Layers }, 
         { name: 'Inventory', icon: Warehouse },
         {
           name: 'Operations Reports', icon: BarChart3, hasSubmenu: true, submenuKey: 'operations_reports',
@@ -55,6 +55,7 @@ export function Sidebar() {
         { name: 'Purchases', icon: ClipboardCheck },
         { name: 'Suppliers', icon: Truck },
         { name: 'Customers', icon: Users },
+        { name: 'Purchase Manager', icon: ShoppingCartIcon },
         {
           name: 'Supply Chain Reports', icon: BarChart3, hasSubmenu: true, submenuKey: 'supply_chain_reports',
           subItems: [
@@ -92,66 +93,94 @@ export function Sidebar() {
           ]
         }
       ]
-    },
-    {
-      title: 'System',
-      items: [
-        { name: 'Users & Roles', icon: ShieldCheck },
-        { name: 'Settings', icon: Sliders }
-      ]
     }
   ];
 
   return (
-    <aside className={`fixed md:sticky top-0 bottom-0 left-0 z-40 h-screen flex flex-col bg-slate-900 text-slate-300 border-r border-slate-800/20 ${sidebarCollapsed ? 'w-[72px]' : 'w-[260px]'}`}>
-      <div className="h-16 flex items-center justify-between px-5 border-b border-slate-800/30">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-indigo-600 text-white"><Store className="w-5 h-5" /></div>
-          {!sidebarCollapsed && <span className="font-black text-white">Exclusive Mart</span>}
+    <aside style={{
+      position: 'sticky', top: 0, bottom: 0, left: 0, zIndex: 40, height: '100vh',
+      display: 'flex', flexDirection: 'column', backgroundColor: '#0f172a',
+      color: '#cbd5e1', borderRight: '1px solid #1e293b', width: sidebarCollapsed ? '72px' : '260px',
+      transition: 'width 0.2s ease-in-out'
+    }}>
+      <div style={{ height: '64px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', borderBottom: '1px solid #1e293b' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ padding: '8px', borderRadius: '12px', backgroundColor: '#4f46e5', color: '#fff', display: 'flex', alignItems: 'center' }}><Store className="w-5 h-5" /></div>
+          {!sidebarCollapsed && <span style={{ fontWeight: '900', color: '#fff', fontSize: '15px' }}>Exclusive Mart</span>}
         </div>
-        <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="text-slate-400">
+        <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
           {sidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
         </button>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5 scrollbar-thin">
+      <nav style={{ flex: 1, overflowY: 'auto', padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
         {menuGroups.map((group, gIdx) => (
-          <div key={gIdx} className="space-y-1">
-            {!sidebarCollapsed && <div className="px-3 text-[10px] font-black uppercase text-slate-600 tracking-wider mb-2">{group.title}</div>}
-            {group.items.map((item) => (
-              <div key={item.name} className="relative group">
-                <button
-                  onClick={(e) => {
-                    if (item.hasSubmenu) {
-                      toggleSubmenu(item.submenuKey, e);
-                    } else {
-                      setActiveModule(item.name);
-                      setActiveReport(null);
-                    }
-                  }}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium transition-all ${activeModule === item.name ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800/50 text-slate-400'}`}
-                >
-                  <div className="flex items-center gap-3"><item.icon size={16} /> {!sidebarCollapsed && item.name}</div>
-                  {item.hasSubmenu && !sidebarCollapsed && <ChevronDown size={14} className={`transition-transform ${expandedSubmenus[item.submenuKey] ? 'rotate-180' : ''}`} />}
-                </button>
-                
-                {/* Submenu Logic */}
-                {item.hasSubmenu && expandedSubmenus[item.submenuKey] && !sidebarCollapsed && (
-                  <div className="pl-4 mt-1 border-l border-slate-800 ml-5 space-y-0.5">
-                    {item.subItems.map((sub) => (
-                      <button key={sub.id} onClick={() => { setActiveModule('Reports'); setActiveReport(sub.id); }}
-                        className="group flex items-center justify-between w-full px-3 py-1.5 text-[11px] text-slate-500 hover:text-indigo-400 transition-all rounded-md hover:bg-slate-800/50">
-                        <span className="flex items-center gap-2"><sub.icon size={13} /> {sub.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
+          <div key={gIdx} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {!sidebarCollapsed && <div style={{ padding: '0 12px', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', color: '#475569', trackingWider: '0.1em', marginBottom: '8px' }}>{group.title}</div>}
+            {group.items.map((item) => {
+              const isSelected = activeModule === item.name;
+              return (
+                <div key={item.name} style={{ position: 'relative' }}>
+                  <button
+                    onClick={(e) => {
+                      if (item.hasSubmenu) {
+                        toggleSubmenu(item.submenuKey, e);
+                      } else {
+                        setActiveModule(item.name);
+                        if (setActiveReport) setActiveReport(null);
+                      }
+                    }}
+                    style={{
+                      width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '10px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: '500',
+                      border: 'none', cursor: 'pointer', transition: 'all 0.2s',
+                      backgroundColor: isSelected ? '#4f46e5' : 'transparent',
+                      color: isSelected ? '#fff' : '#94a3b8'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><item.icon size={16} /> {!sidebarCollapsed && item.name}</div>
+                    {item.hasSubmenu && !sidebarCollapsed && <ChevronDown size={14} style={{ transform: expandedSubmenus[item.submenuKey] ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />}
+                  </button>
+                  
+                  {item.hasSubmenu && expandedSubmenus[item.submenuKey] && !sidebarCollapsed && (
+                    <div style={{ paddingLeft: '16px', marginTop: '4px', borderLeft: '1px solid #1e293b', marginLeft: '20px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      {item.subItems.map((sub) => {
+                        const isSubSelected = activeModule === (sub.id === 'trial_balance' ? 'Trial Balance' : sub.name);
+                        return (
+                          <button key={sub.id} 
+                            onClick={() => { 
+                              if (sub.id === 'trial_balance') {
+                                setActiveModule('Trial Balance'); // 🔥 Direct Module Set for Trial Balance
+                                if (setActiveReport) setActiveReport('trial_balance');
+                              } else {
+                                setActiveModule('Reports');
+                                if (setActiveReport) setActiveReport(sub.id);
+                              }
+                            }}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 12px',
+                              fontSize: '12px', 
+                              color: isSubSelected ? '#818cf8' : '#64748b', 
+                              fontWeight: isSubSelected ? 'bold' : 'normal',
+                              background: 'none', border: 'none', textAlign: 'left',
+                              cursor: 'pointer', borderRadius: '6px', transition: 'all 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.target.style.color = '#818cf8'}
+                            onMouseLeave={(e) => e.target.style.color = isSubSelected ? '#818cf8' : '#64748b'}
+                          >
+                            <sub.icon size={13} /> {sub.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         ))}
       </nav>
     </aside>
   );
 }
-export default Sidebar
+export default Sidebar;
