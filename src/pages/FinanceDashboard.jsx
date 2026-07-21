@@ -1,14 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
-  LineChart, Line 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell 
 } from 'recharts';
 import { 
   ArrowUpCircle, ArrowDownCircle, Landmark, Wallet, 
-  AlertCircle, RefreshCw, CheckCircle, TrendingUp, Download 
+  RefreshCw, Download, CreditCard, Plus 
 } from 'lucide-react';
 
-// Sample Data (Yeh data tum API se fetch karoge)
+// Apna alag se banaya hua component import kar liya
+import ReceivePaymentForm from '../components/ui/ReceivePaymentForm'; 
+
 const stats = [
   { label: 'Receivables', value: 'Rs 450,000', icon: ArrowUpCircle, color: 'text-emerald-600' },
   { label: 'Payables', value: 'Rs 210,000', icon: ArrowDownCircle, color: 'text-rose-600' },
@@ -19,18 +20,37 @@ const stats = [
 const profitData = [{ name: 'Profit', value: 850000 }, { name: 'Expense', value: 340000 }];
 
 export const FinanceDashboard = () => {
+  // State to toggle/open Receive Payment view or modal on dashboard
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+
   return (
     <div className="p-8 bg-slate-50 min-h-screen font-sans">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-2xl font-black text-slate-800">Financial Overview</h1>
-          <p className="text-slate-500 text-sm">Welcome back, check your real-time ERP status.</p>
+          <p className="text-slate-500 text-sm">Welcome back, check your real-time ERP status[cite: 1].</p>
         </div>
-        <button className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-indigo-700 transition">
-          <Download size={16} /> Export Reports
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Button to toggle or open our separate Receive Payment Component */}
+          <button 
+            onClick={() => setShowPaymentForm(!showPaymentForm)}
+            className="flex items-center gap-2 bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-emerald-700 transition"
+          >
+            <CreditCard size={16} /> {showPaymentForm ? 'Close Payment Form' : 'Receive Payment'}
+          </button>
+          <button className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-indigo-700 transition">
+            <Download size={16} /> Export Reports
+          </button>
+        </div>
       </div>
+
+      {/* Agar user button dabaye toh wahan hamara alag component render hojaye */}
+      {showPaymentForm && (
+        <div className="mb-8 bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+          <ReceivePaymentForm />
+        </div>
+      )}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-4 gap-6 mb-8">
