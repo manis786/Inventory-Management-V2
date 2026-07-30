@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell 
 } from 'recharts';
 import { 
   ArrowUpCircle, ArrowDownCircle, Landmark, Wallet, 
-  RefreshCw, Download, CreditCard, Plus 
+  RefreshCw, Download, CreditCard, FileText, Plus 
 } from 'lucide-react';
 
-// Apna alag se banaya hua component import kar liya
+// Apne alag se banaye hue components import kar liye
 import ReceivePaymentForm from '../components/ui/ReceivePaymentForm'; 
+import VoucherForm from '../components/ui/VoucherForm'
 
 const stats = [
   { label: 'Receivables', value: 'Rs 450,000', icon: ArrowUpCircle, color: 'text-emerald-600' },
@@ -20,8 +21,9 @@ const stats = [
 const profitData = [{ name: 'Profit', value: 850000 }, { name: 'Expense', value: 340000 }];
 
 export const FinanceDashboard = () => {
-  // State to toggle/open Receive Payment view or modal on dashboard
+  // States to toggle views on dashboard
   const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [showVoucherForm, setShowVoucherForm] = useState(false);
 
   return (
     <div className="p-8 bg-slate-50 min-h-screen font-sans">
@@ -32,20 +34,36 @@ export const FinanceDashboard = () => {
           <p className="text-slate-500 text-sm">Welcome back, check your real-time ERP status[cite: 1].</p>
         </div>
         <div className="flex items-center gap-3">
-          {/* Button to toggle or open our separate Receive Payment Component */}
+          {/* Voucher Entry Toggle Button */}
           <button 
-            onClick={() => setShowPaymentForm(!showPaymentForm)}
+            onClick={() => { setShowVoucherForm(!showVoucherForm); setShowPaymentForm(false); }}
+            className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-indigo-700 transition"
+          >
+            <FileText size={16} /> {showVoucherForm ? 'Close Voucher Form' : 'New Voucher Entry'}
+          </button>
+
+          {/* Receive Payment Toggle Button */}
+          <button 
+            onClick={() => { setShowPaymentForm(!showPaymentForm); setShowVoucherForm(false); }}
             className="flex items-center gap-2 bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-emerald-700 transition"
           >
             <CreditCard size={16} /> {showPaymentForm ? 'Close Payment Form' : 'Receive Payment'}
           </button>
-          <button className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-indigo-700 transition">
+
+          <button className="flex items-center gap-2 bg-slate-800 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-slate-900 transition">
             <Download size={16} /> Export Reports
           </button>
         </div>
       </div>
 
-      {/* Agar user button dabaye toh wahan hamara alag component render hojaye */}
+      {/* Voucher Form Section */}
+      {showVoucherForm && (
+        <div className="mb-8 bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+          <VoucherForm />
+        </div>
+      )}
+
+      {/* Receive Payment Section */}
       {showPaymentForm && (
         <div className="mb-8 bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
           <ReceivePaymentForm />

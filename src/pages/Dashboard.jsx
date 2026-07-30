@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { API_BASE_URL } from '../config/api';
 import { formatPKR } from '../data/store';
 import {
   AreaChart, Area, BarChart, Bar, LineChart, Line,
@@ -172,7 +173,7 @@ export function Dashboard() {
 
     const getDashboardData = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/dashboard/summary');
+        const res = await fetch(`${API_BASE_URL}/dashboard/summary`);
         if (!res.ok) {
           throw new Error(`Server error: ${res.status}`);
         }

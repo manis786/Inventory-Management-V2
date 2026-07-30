@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../config/api';
 import { useApp } from '../context/AppContext';
 import { Table } from '../components/ui/Table';
 import { Button } from '../components/ui/Button';
@@ -39,7 +40,7 @@ console.log("--- Approval Process Started ---");
     if (!window.confirm(`Kya aap status "${newStatus}" karna chahte hain?`)) return;
 
     try {
-      await axios.put(`http://localhost:5000/api/purchases/${poId}`, { status: newStatus });
+      await axios.put(`${API_BASE_URL}/purchases/${poId}`, { status: newStatus });
 console.log("Items to process:", selectedPO.items);
       if (newStatus === 'Approved') {
         await receivePurchaseOrder(poId);
@@ -101,9 +102,9 @@ console.log("Items to process:", selectedPO.items);
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 p-6 bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors duration-200">
       <div className="flex justify-between items-center">
-        <h1 className="text-xl font-black">Purchase Orders</h1>
+        <h1 className="text-xl font-black text-slate-800 dark:text-slate-100">Purchase Orders</h1>
         <Button onClick={() => setCreateModalOpen(true)} icon={PlusCircle}>Draft Order</Button>
       </div>
 
@@ -117,7 +118,7 @@ console.log("Items to process:", selectedPO.items);
               <option value="">Choose supplier...</option>
               {suppliers.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
             </Select>
-            <form onSubmit={handleAddItem} className="p-4 border bg-gray-50 rounded">
+            <form onSubmit={handleAddItem} className="p-4 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
               <Select label="Product" value={draftProductId} onChange={(e) => { const p = products.find(i => i.id === e.target.value); setDraftProductId(e.target.value); if(p) setDraftCost(p.costPrice); }}>
                 <option value="">Select...</option>
                 {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -128,8 +129,8 @@ console.log("Items to process:", selectedPO.items);
             </form>
           </div>
           <div className="col-span-7">
-            <div className="h-[250px] overflow-y-auto border p-2">
-              {poItems.map((item, i) => <div key={i} className="flex justify-between text-xs p-2 border-b"><span>{item.name}</span><span>{formatPKR(item.total)}</span></div>)}
+            <div className="h-[250px] overflow-y-auto border border-slate-200 dark:border-slate-700 rounded-lg p-2 bg-white dark:bg-slate-900">
+              {poItems.map((item, i) => <div key={i} className="flex justify-between text-xs p-2 border-b border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300"><span>{item.name}</span><span>{formatPKR(item.total)}</span></div>)}
             </div>
             <Button className="w-full mt-4" onClick={handlePoSubmit}>Submit Order</Button>
           </div>
@@ -139,9 +140,9 @@ console.log("Items to process:", selectedPO.items);
       {/* DETAIL MODAL */}
       <Modal isOpen={detailModalOpen} onClose={() => setDetailModalOpen(false)} title="Order Details">
         {selectedPO && (
-          <div className="p-4">
-            <p><strong>PO:</strong> {selectedPO.poNumber}</p>
-            {selectedPO.items?.map((item, i) => <div key={i} className="flex justify-between py-2 border-b"><span>{item.product?.name}</span><span>x{item.quantity}</span></div>)}
+          <div className="p-4 text-slate-800 dark:text-slate-200">
+            <p className="mb-3"><strong>PO:</strong> {selectedPO.poNumber}</p>
+            {selectedPO.items?.map((item, i) => <div key={i} className="flex justify-between py-2 border-b border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300"><span>{item.product?.name}</span><span>x{item.quantity}</span></div>)}
           </div>
         )}
       </Modal>

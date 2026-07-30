@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../config/api';
 import toast from 'react-hot-toast';
 import { ACCOUNTS, JOURNAL_ENTRIES } from '../data/finance';
 import { EXPENSES } from '../data/expenses';
@@ -24,6 +25,33 @@ export function AppProvider({ children }) {
   const [toasts, setToasts] = useState([]);
   const [sales, setSales] = useState([]);
 
+  // --- Layout & Theme States ---
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem('theme');
+    if (saved) return saved;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const body = document.body;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+      body.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+      body.classList.remove('dark');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
+
   // --- Missing / Custom States ---
   const [financeAccounts, setFinanceAccounts] = useState(ACCOUNTS);
   const [journalEntries, setJournalEntries] = useState(JOURNAL_ENTRIES);
@@ -32,7 +60,6 @@ export function AppProvider({ children }) {
   const [users, setUsers] = useState(USERS);
   const [currentUser, setCurrentUser] = useState(USERS[0]);
   const [storeSettings, setStoreSettings] = useState(STORE_INFO);
-
 
   // --- Cart States (POS) ---
   const [cart, setCart] = useState([]);
@@ -85,48 +112,48 @@ export function AppProvider({ children }) {
   // --- CRUD Operations ---
   const fetchProducts = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/products');
+      const res = await axios.get(`${API_BASE_URL}/products`);
       setProducts(Array.isArray(res.data) ? res.data : (res.data.data || []));
     } catch (err) { console.error("Fetch Products Error:", err); }
   };
 
   const fetchPurchases = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/purchases');
+      const res = await axios.get(`${API_BASE_URL}/purchases`);
       setPurchases(Array.isArray(res.data.data) ? res.data.data : []);
     } catch (err) { console.error("Fetch Purchases Error:", err); }
   };
 
   const fetchCategories = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/categories');
+      const res = await axios.get(`${API_BASE_URL}/categories`);
       setCategories(Array.isArray(res.data) ? res.data : (res.data.data || []));
     } catch (err) { console.error("Fetch Categories Error:", err); }
   };
 
   const fetchSuppliers = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/suppliers');
+      const res = await axios.get(`${API_BASE_URL}/suppliers`);
       setSuppliers(Array.isArray(res.data) ? res.data : (res.data.data || []));
     } catch (err) { console.error("Fetch Suppliers Error:", err); }
   };
 
   const fetchCustomers = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/customers');
+      const res = await axios.get(`${API_BASE_URL}/customers`);
       setCustomers(Array.isArray(res.data) ? res.data : (res.data.data || []));
     } catch (err) { console.error("Fetch Customers Error:", err); }
   };
   const fetchSales = async () => {
   try {
-    const res = await axios.get('http://localhost:5000/api/sales');
+    const res = await axios.get(`${API_BASE_URL}/sales`);
     setSales(Array.isArray(res.data) ? res.data : (res.data.data || []));
   } catch (err) { console.error("Fetch Sales Error:", err); }
 };
 
 const addSale = async (saleData) => {
   try {
-    await axios.post('http://localhost:5000/api/sales', saleData);
+    await axios.post(`${API_BASE_URL}/sales`, saleData);
     await fetchSales(); // Data refresh karne ke liye
     addToast('Invoice Posted Successfully!', 'success');
   } catch (err) { 
@@ -137,14 +164,14 @@ const addSale = async (saleData) => {
 
   const addSupplier = async (supplierData) => {
     try {
-      await axios.post('http://localhost:5000/api/suppliers', supplierData);
+      await axios.post(`${API_BASE_URL}/suppliers`, supplierData);
       fetchSuppliers();
     } catch (err) { console.error("Add Supplier Error:", err); }
   };
 
   const addPurchaseOrder = async (poData) => {
     try {
-      await axios.post('http://localhost:5000/api/purchases', poData);
+      await axios.post(`${API_BASE_URL}/purchases`, poData);
       fetchPurchases();
       addToast('Purchase Order created!', 'success');
     } catch (err) { addToast(`Error: ${err.message}`, 'error'); }
@@ -152,7 +179,7 @@ const addSale = async (saleData) => {
 
   const receivePurchaseOrder = async (id) => {
     try {
-      await axios.patch(`http://localhost:5000/api/purchases/${id}/receive`);
+      await axios.patch(`${API_BASE_URL}/purchases/${id}/receive`);
       fetchPurchases();
       fetchProducts(); // Stock update hone ke baad products refresh
     } catch (err) { addToast('Failed to receive', 'error'); }
@@ -164,7 +191,7 @@ const addSale = async (saleData) => {
 
 const login = async (email, password) => {
     try {
-      const response = await axios.post(`http://localhost:5000/api/auth/login`, {
+      const response = await axios.post(`${API_BASE_URL}/auth/login`, {
         email,
         password
       });
@@ -205,7 +232,7 @@ const logout = () => {
 const addMovement = async (movementData) => {
   try {
     // API Call
-    const res = await axios.post('http://localhost:5000/api/transactions', movementData);
+    const res = await axios.post(`${API_BASE_URL}/transactions`, movementData);
     
     // State Update
     setMovements(prev => [res.data.data, ...prev]);
@@ -221,7 +248,7 @@ const addMovement = async (movementData) => {
 
   const updateSaleStatus = async (id, status) => {
   try {
-    await axios.put(`http://localhost:5000/api/sales/${id}`, { status });
+    await axios.put(`${API_BASE_URL}/sales/${id}`, { status });
     // State refresh karne ke liye fetchSales call karo
     await fetchSales(); 
   } catch (error) {
@@ -294,6 +321,10 @@ const addMovement = async (movementData) => {
 
   return (
     <AppContext.Provider value={{
+      theme, setTheme, toggleTheme,
+      sidebarCollapsed, setSidebarCollapsed,
+      mobileSidebarOpen, setMobileSidebarOpen,
+      notifications, setNotifications,
       products, setProducts, fetchProducts, updateProductStock,
       categories, setCategories, fetchCategories,
       suppliers, setSuppliers, fetchSuppliers, addSupplier,

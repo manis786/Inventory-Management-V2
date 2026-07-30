@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../../config/api';
 import { PackageCheck, Clock, FileText, ArrowDownLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -11,7 +12,7 @@ export const PurchaseManager = () => {
   const fetchPurchases = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5000/api/purchases');
+      const response = await axios.get(`${API_BASE_URL}/purchases`);
       if (response.data.success) {
         setPurchases(response.data.data);
       }
@@ -33,7 +34,7 @@ export const PurchaseManager = () => {
       toast.loading("Processing Stock In & Ledger Posting...");
       
       // Backend par receive API hit hogi jo poora ACID transaction handle karegi
-      const response = await axios.patch(`http://localhost:5000/api/purchases/receive/${purchaseId}`);
+      const response = await axios.patch(`${API_BASE_URL}/purchases/receive/${purchaseId}`);
       
       toast.dismiss();
       if (response.data.success) {

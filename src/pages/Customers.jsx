@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../config/api';
 import { Table } from '../components/ui/Table';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
@@ -31,7 +32,7 @@ export function Customers() {
   // Fetch Customers from Database
   const fetchCustomers = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/customers');
+      const res = await axios.get(`${API_BASE_URL}/customers`);
       setCustomers(res.data);
       setLoading(false);
     } catch (err) {
@@ -50,9 +51,9 @@ export function Customers() {
     e.preventDefault();
     try {
       if (editingCust) {
-        await axios.put(`http://localhost:5000/api/customers/${editingCust._id}`, formData);
+        await axios.put(`${API_BASE_URL}/customers/${editingCust._id}`, formData);
       } else {
-        await axios.post('http://localhost:5000/api/customers', formData);
+        await axios.post(`${API_BASE_URL}/customers`, formData);
       }
       setFormModalOpen(false);
       
@@ -96,9 +97,9 @@ export function Customers() {
   ];
 
   return (
-    <div className="space-y-5 p-4">
+    <div className="space-y-5 p-4 bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors duration-200">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-black text-slate-800">Customer Registry</h1>
+        <h1 className="text-2xl font-black text-slate-800 dark:text-slate-100">Customer Registry</h1>
         <Button
           variant="primary"
           icon={PlusCircle}
@@ -135,7 +136,7 @@ export function Customers() {
 
           {/* Section 1: Personal Details */}
           <div className="space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b pb-1">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 border-b border-slate-200 dark:border-slate-800 pb-1">
               Personal Details
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -164,8 +165,8 @@ export function Customers() {
 
           {/* Section 2: Account & Financials */}
           <div className="space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b pb-1">
-              Account & Ledger Info
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 border-b border-slate-200 dark:border-slate-800 pb-1">
+              Account &amp; Ledger Info
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
@@ -198,9 +199,9 @@ export function Customers() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-slate-600">Account Status</label>
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">Account Status</label>
                 <select
-                  className="w-full p-2 border rounded-lg text-sm"
+                  className="w-full p-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                 >
@@ -224,7 +225,7 @@ export function Customers() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
             <Button variant="outline" type="button" onClick={() => setFormModalOpen(false)}>
               Cancel
             </Button>

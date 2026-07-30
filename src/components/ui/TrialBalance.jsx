@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../../config/api';
 
 export default function TrialBalance() {
   const [tableRows, setTableRows] = useState([]);
@@ -10,7 +11,7 @@ export default function TrialBalance() {
   const fetchReport = async () => {
     try {
       setLoading(true);
-      const res = await axios.get('http://localhost:5000/api/reports/trial-balance');
+      const res = await axios.get(`${API_BASE_URL}/reports/trial-balance`);
       
       if (res.data && res.data.success) {
         let rawRows = res.data.data.rows || [];

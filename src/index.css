@@ -32,6 +32,14 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
+    background-color: #f8fafc;
+    color: #0f172a;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  body.dark, html.dark body {
+    background-color: #090d16;
+    color: #f8fafc;
   }
 
   /* Custom Scrollbar */

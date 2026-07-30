@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../config/api';
 import { useApp } from '../context/AppContext';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -24,10 +25,10 @@ export default function Categories() {
     try {
       if (editingCat) {
         // Edit/Update
-        await axios.put(`http://localhost:5000/api/categories/${editingCat._id}`, { name });
+        await axios.put(`${API_BASE_URL}/categories/${editingCat._id}`, { name });
       } else {
         // Add
-        await axios.post('http://localhost:5000/api/categories', { name });
+        await axios.post(`${API_BASE_URL}/categories`, { name });
       }
       setName('');
       setEditingCat(null);
@@ -46,7 +47,7 @@ export default function Categories() {
     }
     if (window.confirm("Delete karna chahte hain?")) {
       try {
-        await axios.delete(`http://localhost:5000/api/categories/${id}`);
+        await axios.delete(`${API_BASE_URL}/categories/${id}`);
         fetchCategories();
       } catch (err) {
         alert("Delete error.");
@@ -62,33 +63,33 @@ export default function Categories() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors duration-200">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-black text-slate-800">Manage Categories</h1>
+        <h1 className="text-2xl font-black text-slate-800 dark:text-slate-100">Manage Categories</h1>
         <Button onClick={() => { setEditingCat(null); setName(''); setModalOpen(true); }}>
           + Add Category
         </Button>
       </div>
 
-      <div className="bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
         <table className="w-full text-left">
-          <thead className="bg-slate-50 border-b border-slate-200">
+          <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800">
             <tr>
-              <th className="p-4 text-sm font-bold text-slate-600">Category Name</th>
-              <th className="p-4 text-sm font-bold text-slate-600">Products Count</th>
-              <th className="p-4 text-sm font-bold text-slate-600">Actions</th>
+              <th className="p-4 text-sm font-bold text-slate-600 dark:text-slate-400">Category Name</th>
+              <th className="p-4 text-sm font-bold text-slate-600 dark:text-slate-400">Products Count</th>
+              <th className="p-4 text-sm font-bold text-slate-600 dark:text-slate-400">Actions</th>
             </tr>
           </thead>
           <tbody>
             {categories.map((cat) => (
-              <tr key={cat._id} className="border-b border-slate-100 hover:bg-slate-50">
-                <td className="p-4 text-sm font-medium">{cat.name}</td>
-                <td className="p-4 text-sm font-semibold text-blue-600">
+              <tr key={cat._id} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                <td className="p-4 text-sm font-medium text-slate-800 dark:text-slate-200">{cat.name}</td>
+                <td className="p-4 text-sm font-semibold text-indigo-600 dark:text-indigo-400">
                   {getProductCount(cat._id)} Products
                 </td>
                 <td className="p-4 flex gap-2">
-                  <Button onClick={() => openEditModal(cat)} className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1 text-xs">Edit</Button>
-                  <Button onClick={() => handleDelete(cat._id)} className="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1 text-xs">Delete</Button>
+                  <Button onClick={() => openEditModal(cat)} variant="secondary" size="sm">Edit</Button>
+                  <Button onClick={() => handleDelete(cat._id)} variant="danger" size="sm">Delete</Button>
                 </td>
               </tr>
             ))}

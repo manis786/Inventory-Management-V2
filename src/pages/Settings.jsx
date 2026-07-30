@@ -11,7 +11,10 @@ import {
   Percent,
   MapPin,
   HelpCircle,
-  ToggleLeft
+  ToggleLeft,
+  Sun,
+  Moon,
+  Palette
 } from 'lucide-react';
 
 export function Settings() {
@@ -19,7 +22,9 @@ export function Settings() {
     storeSettings,
     cartTaxPercent,
     saveStoreSettings,
-    addToast
+    addToast,
+    theme,
+    toggleTheme
   } = useApp();
 
   // Local Form state
@@ -187,6 +192,47 @@ export function Settings() {
 
         {/* Right Form: Tax & System Control settings (4 cols) */}
         <div className="md:col-span-4 space-y-6">
+          {/* Appearance & Theme Card */}
+          <Card>
+            <CardHeader className="py-3 px-4 bg-slate-50 dark:bg-slate-950/20 border-b border-slate-100 dark:border-slate-800">
+              <CardTitle className="flex items-center gap-2">
+                <Palette className="w-4 h-4 text-indigo-600" />
+                Appearance & Theme Mode
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-5 space-y-3">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Choose your preferred interface theme for all modules.
+              </p>
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => theme === 'dark' && toggleTheme()}
+                  className={`flex items-center justify-center gap-2 p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                    theme === 'light'
+                      ? 'border-indigo-600 bg-indigo-50/50 text-indigo-700 dark:bg-indigo-950/30'
+                      : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400'
+                  }`}
+                >
+                  <Sun className="w-4 h-4 text-amber-500" />
+                  Light Mode
+                </button>
+                <button
+                  type="button"
+                  onClick={() => theme === 'light' && toggleTheme()}
+                  className={`flex items-center justify-center gap-2 p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                    theme === 'dark'
+                      ? 'border-indigo-600 bg-indigo-950/50 text-indigo-400'
+                      : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400'
+                  }`}
+                >
+                  <Moon className="w-4 h-4 text-indigo-400" />
+                  Dark Mode
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Tax config Card */}
           <Card>
             <CardHeader className="py-3 px-4 bg-slate-50 dark:bg-slate-950/20 border-b border-slate-100 dark:border-slate-805">

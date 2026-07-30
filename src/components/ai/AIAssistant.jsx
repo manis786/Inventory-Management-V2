@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { API_BASE_URL } from '../../config/api';
 import { Bot, X, Send, Minimize2, Maximize2, RotateCcw, Package, Users, Truck, ShoppingCart, TrendingUp, BarChart3, Sparkles } from 'lucide-react';
 const MdText = ({ text }) => {
   if (!text) return null;
@@ -60,7 +61,7 @@ export function AIAssistant() {
     abortControllerRef.current = new AbortController();
 
     try {
-      const response = await fetch('http://localhost:5000/api/ai/chat', {
+      const response = await fetch(`${API_BASE_URL}/ai/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: messageText, history: messages }),

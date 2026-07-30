@@ -97,30 +97,46 @@ export function Sidebar() {
   ];
 
   return (
-    <aside style={{
-      position: 'sticky', top: 0, bottom: 0, left: 0, zIndex: 40, height: '100vh',
-      display: 'flex', flexDirection: 'column', backgroundColor: '#0f172a',
-      color: '#cbd5e1', borderRight: '1px solid #1e293b', width: sidebarCollapsed ? '72px' : '260px',
-      transition: 'width 0.2s ease-in-out'
-    }}>
-      <div style={{ height: '64px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', borderBottom: '1px solid #1e293b' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ padding: '8px', borderRadius: '12px', backgroundColor: '#4f46e5', color: '#fff', display: 'flex', alignItems: 'center' }}><Store className="w-5 h-5" /></div>
-          {!sidebarCollapsed && <span style={{ fontWeight: '900', color: '#fff', fontSize: '15px' }}>Exclusive Mart</span>}
+    <aside
+      className={`
+        sticky top-0 left-0 z-40 h-screen flex flex-col
+        bg-slate-900 dark:bg-slate-950 text-slate-400
+        border-r border-slate-800 dark:border-slate-800/80
+        transition-[width] duration-200 ease-in-out sidebar-shadow
+        ${sidebarCollapsed ? 'w-[72px]' : 'w-[260px]'}
+      `}
+    >
+      {/* Logo / Header */}
+      <div className="h-16 flex items-center justify-between px-5 border-b border-slate-800 dark:border-slate-800/80 shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-indigo-600 text-white flex items-center shrink-0">
+            <Store className="w-5 h-5" />
+          </div>
+          {!sidebarCollapsed && (
+            <span className="font-black text-white text-[15px] whitespace-nowrap">Exclusive Mart</span>
+          )}
         </div>
-        <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
+        <button
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          className="text-slate-500 hover:text-slate-200 transition-colors p-1 rounded-md hover:bg-slate-800 cursor-pointer shrink-0"
+        >
           {sidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
         </button>
       </div>
 
-      <nav style={{ flex: 1, overflowY: 'auto', padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto py-4 px-3 flex flex-col gap-5">
         {menuGroups.map((group, gIdx) => (
-          <div key={gIdx} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            {!sidebarCollapsed && <div style={{ padding: '0 12px', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', color: '#475569', trackingWider: '0.1em', marginBottom: '8px' }}>{group.title}</div>}
+          <div key={gIdx} className="flex flex-col gap-1">
+            {!sidebarCollapsed && (
+              <div className="px-3 text-[10px] font-black uppercase text-slate-600 tracking-widest mb-1">
+                {group.title}
+              </div>
+            )}
             {group.items.map((item) => {
               const isSelected = activeModule === item.name;
               return (
-                <div key={item.name} style={{ position: 'relative' }}>
+                <div key={item.name} className="relative">
                   <button
                     onClick={(e) => {
                       if (item.hasSubmenu) {
@@ -130,45 +146,57 @@ export function Sidebar() {
                         if (setActiveReport) setActiveReport(null);
                       }
                     }}
-                    style={{
-                      width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      padding: '10px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: '500',
-                      border: 'none', cursor: 'pointer', transition: 'all 0.2s',
-                      backgroundColor: isSelected ? '#4f46e5' : 'transparent',
-                      color: isSelected ? '#fff' : '#94a3b8'
-                    }}
+                    className={`
+                      w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-[13px] font-medium
+                      border-none cursor-pointer transition-all duration-150
+                      ${isSelected
+                        ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-900/40'
+                        : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
+                      }
+                    `}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><item.icon size={16} /> {!sidebarCollapsed && item.name}</div>
-                    {item.hasSubmenu && !sidebarCollapsed && <ChevronDown size={14} style={{ transform: expandedSubmenus[item.submenuKey] ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />}
+                    <div className="flex items-center gap-3 min-w-0">
+                      <item.icon size={16} className="shrink-0" />
+                      {!sidebarCollapsed && (
+                        <span className="truncate">{item.name}</span>
+                      )}
+                    </div>
+                    {item.hasSubmenu && !sidebarCollapsed && (
+                      <ChevronDown
+                        size={14}
+                        className={`shrink-0 transition-transform duration-200 ${expandedSubmenus[item.submenuKey] ? 'rotate-180' : ''}`}
+                      />
+                    )}
                   </button>
-                  
+
+                  {/* Sub-menu */}
                   {item.hasSubmenu && expandedSubmenus[item.submenuKey] && !sidebarCollapsed && (
-                    <div style={{ paddingLeft: '16px', marginTop: '4px', borderLeft: '1px solid #1e293b', marginLeft: '20px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <div className="pl-4 mt-1 ml-5 border-l border-slate-800 flex flex-col gap-0.5">
                       {item.subItems.map((sub) => {
                         const isSubSelected = activeModule === (sub.id === 'trial_balance' ? 'Trial Balance' : sub.name);
                         return (
-                          <button key={sub.id} 
-                            onClick={() => { 
+                          <button
+                            key={sub.id}
+                            onClick={() => {
                               if (sub.id === 'trial_balance') {
-                                setActiveModule('Trial Balance'); // 🔥 Direct Module Set for Trial Balance
+                                setActiveModule('Trial Balance');
                                 if (setActiveReport) setActiveReport('trial_balance');
                               } else {
                                 setActiveModule('Reports');
                                 if (setActiveReport) setActiveReport(sub.id);
                               }
                             }}
-                            style={{
-                              display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 12px',
-                              fontSize: '12px', 
-                              color: isSubSelected ? '#818cf8' : '#64748b', 
-                              fontWeight: isSubSelected ? 'bold' : 'normal',
-                              background: 'none', border: 'none', textAlign: 'left',
-                              cursor: 'pointer', borderRadius: '6px', transition: 'all 0.2s'
-                            }}
-                            onMouseEnter={(e) => e.target.style.color = '#818cf8'}
-                            onMouseLeave={(e) => e.target.style.color = isSubSelected ? '#818cf8' : '#64748b'}
+                            className={`
+                              flex items-center gap-2 w-full px-3 py-1.5 rounded-md text-[12px]
+                              border-none text-left cursor-pointer transition-all duration-150
+                              ${isSubSelected
+                                ? 'text-indigo-400 font-semibold bg-indigo-950/30'
+                                : 'text-slate-500 font-normal hover:text-indigo-300 hover:bg-slate-800/50'
+                              }
+                            `}
                           >
-                            <sub.icon size={13} /> {sub.name}
+                            <sub.icon size={13} className="shrink-0" />
+                            <span className="truncate">{sub.name}</span>
                           </button>
                         );
                       })}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../config/api';
 import { useApp } from '../context/AppContext';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -37,10 +38,10 @@ const [itemsPerPage] = useState(10);
       if (editingProduct) {
         // Update
         // console.log("Payload bheja ja raha hai:", formData);
-        await axios.put(`http://localhost:5000/api/products/${editingProduct._id}`, formData);
+        await axios.put(`${API_BASE_URL}/products/${editingProduct._id}`, formData);
       } else {
         // Add
-        await axios.post('http://localhost:5000/api/products', formData);
+        await axios.post(`${API_BASE_URL}/products`, formData);
       }
 
       await fetchProducts();
@@ -57,7 +58,7 @@ const [itemsPerPage] = useState(10);
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this product?")) {
       try {
-        await axios.delete(`http://localhost:5000/api/products/${id}`);
+        await axios.delete(`${API_BASE_URL}/products/${id}`);
         await fetchProducts();
       } catch (err) {
         console.error("Delete Error:", err);
@@ -100,9 +101,9 @@ const getCategoryName = (catId) => {
 
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors duration-200">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-black text-slate-800">Manage Products</h1>
+        <h1 className="text-2xl font-black text-slate-800 dark:text-slate-100">Manage Products</h1>
         <Button onClick={() => openModal()}>+ Add New Product</Button>
       </div>
       
@@ -110,27 +111,27 @@ const getCategoryName = (catId) => {
       
 
       {/* Search Bar */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+      <div className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
         <input
           type="text"
           placeholder="Search by Name, ID, or Barcode..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full md:w-1/3 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+          className="w-full md:w-1/3 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
         />
       </div>
 
       {/* Table */}
-      <div className="bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden overflow-x-auto">
+      <div className="bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden overflow-x-auto">
         <table className="w-full text-left whitespace-nowrap">
-          <thead className="bg-slate-50 border-b border-slate-200">
+          <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800">
             <tr>
-              <th className="p-4 text-sm font-bold text-slate-600">SKU</th>
-              <th className="p-4 text-sm font-bold text-slate-600">Name</th>
-              <th className="p-4 text-sm font-bold text-slate-600">Brand</th>
-              <th className="p-4 text-sm font-bold text-slate-600">Category</th>
-              <th className="p-4 text-sm font-bold text-slate-600">Price</th>
-              <th className="p-4 text-sm font-bold text-slate-600">Actions</th>
+              <th className="p-4 text-sm font-bold text-slate-600 dark:text-slate-400">SKU</th>
+              <th className="p-4 text-sm font-bold text-slate-600 dark:text-slate-400">Name</th>
+              <th className="p-4 text-sm font-bold text-slate-600 dark:text-slate-400">Brand</th>
+              <th className="p-4 text-sm font-bold text-slate-600 dark:text-slate-400">Category</th>
+              <th className="p-4 text-sm font-bold text-slate-600 dark:text-slate-400">Price</th>
+              <th className="p-4 text-sm font-bold text-slate-600 dark:text-slate-400">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -143,20 +144,20 @@ const productCatId = typeof p.category === 'object' ? p.category?._id : p.catego
     // 2. Categories list mein se naam dhoondo
 const foundCategory = categories.find(c => String(c._id) === String(productCatId));
   return (
-    <tr key={p._id} className="border-b border-slate-100 hover:bg-slate-50">
-      <td className="p-4 text-sm">{p.id}</td>
-      <td className="p-4 text-sm font-medium">{p.name}</td>
-      <td className="p-4 text-sm">{p.brand || '-'}</td>
+    <tr key={p._id} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+      <td className="p-4 text-sm font-mono text-slate-600 dark:text-slate-400">{p.id}</td>
+      <td className="p-4 text-sm font-medium text-slate-800 dark:text-slate-200">{p.name}</td>
+      <td className="p-4 text-sm text-slate-600 dark:text-slate-400">{p.brand || '-'}</td>
       
       {/* Yahan fix apply ho raha hai */}
-      <td className="p-4 text-sm font-semibold text-blue-600">
+      <td className="p-4 text-sm font-semibold text-indigo-600 dark:text-indigo-400">
         {foundCategory ? foundCategory.name : "Uncategorized"}
       </td>
 
-      <td className="p-4 text-sm">{p.salePrice}</td>
+      <td className="p-4 text-sm font-medium text-slate-800 dark:text-slate-200">Rs. {p.salePrice}</td>
       <td className="p-4 text-sm space-x-2">
-        <Button onClick={() => openModal(p)} className="bg-blue-50 text-blue-600 px-3 py-1 text-sm">Edit</Button>
-        <Button onClick={() => handleDelete(p._id)} className="bg-red-50 text-red-600 px-3 py-1 text-sm">Delete</Button>
+        <Button onClick={() => openModal(p)} variant="secondary" size="sm">Edit</Button>
+        <Button onClick={() => handleDelete(p._id)} variant="danger" size="sm">Delete</Button>
       </td>
     </tr>
   );
@@ -169,7 +170,7 @@ const foundCategory = categories.find(c => String(c._id) === String(productCatId
   <button
     disabled={currentPage === 1}
     onClick={() => setCurrentPage(prev => prev - 1)}
-    className="w-10 h-10 border border-slate-300 rounded flex items-center justify-center hover:bg-slate-50 disabled:opacity-50"
+    className="w-10 h-10 border border-slate-200 dark:border-slate-700 rounded flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 transition-colors"
   > &lt; </button>
 
   {(() => {
@@ -195,7 +196,7 @@ const foundCategory = categories.find(c => String(c._id) === String(productCatId
           className={`w-10 h-10 border rounded transition-all cursor-pointer ${
             currentPage === p 
               ? 'bg-indigo-600 text-white border-indigo-600' 
-              : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-600'
+              : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-500'
           }`}
         >
           {p}
@@ -208,7 +209,7 @@ const foundCategory = categories.find(c => String(c._id) === String(productCatId
   <button
     disabled={currentPage === Math.ceil(filteredProducts.length / itemsPerPage)}
     onClick={() => setCurrentPage(prev => prev + 1)}
-    className="w-10 h-10 border border-slate-300 rounded flex items-center justify-center hover:bg-slate-50 disabled:opacity-50"
+    className="w-10 h-10 border border-slate-200 dark:border-slate-700 rounded flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 transition-colors"
   > &gt; </button>
 </div>
 
@@ -225,11 +226,11 @@ const foundCategory = categories.find(c => String(c._id) === String(productCatId
             
             {/* Category Dropdown */}
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-semibold text-slate-700">Category</label>
+              <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Category</label>
               <select
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
                 required
               >
                 <option value="">Select a Category</option>

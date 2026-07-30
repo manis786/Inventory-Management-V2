@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../../config/api';
 import { X, Building2, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -32,7 +33,7 @@ export const AccountModal = ({ isOpen, onClose, onRefresh }) => {
           }
 
           // Dynamic network hit with query parameter
-          const response = await axios.get(`http://localhost:5000/api/finance/coa/parent-groups?level=${targetLevel}`);
+          const response = await axios.get(`${API_BASE_URL}/finance/coa/parent-groups?level=${targetLevel}`);
           if (response.data.success) {
             setParentOptions(response.data.data);
           }
@@ -79,7 +80,7 @@ export const AccountModal = ({ isOpen, onClose, onRefresh }) => {
       };
       if (payload.level === 3) delete payload.code;
 
-      const response = await axios.post('http://localhost:5000/api/finance/coa/add', payload);
+      const response = await axios.post(`${API_BASE_URL}/finance/coa/add`, payload);
       if (response.data.success) {
         toast.success("Account successfully created!");
         setFormData({ name: '', code: '', level: 1, type: 'Asset', isGroup: false, parent: '' });

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../../config/api';
 import { X, Edit2, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -20,7 +21,7 @@ export const EditAccountModal = ({ isOpen, onClose, account, onRefresh }) => {
       return;
     }
     try {
-      const response = await axios.put(`http://localhost:5000/api/finance/coa/update/${account._id}`, {
+      const response = await axios.put(`${API_BASE_URL}/finance/coa/update/${account._id}`, {
         name: editName
       });
       if (response.data.success) {

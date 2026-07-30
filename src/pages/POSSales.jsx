@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../config/api';
 import { useApp } from '../context/AppContext';
 import { formatPKR } from '../data/store';
 import { Minus, Plus, Trash2, CreditCard, Banknote, Smartphone, BookOpen, ShoppingCart, ScanBarcode } from 'lucide-react';
@@ -100,7 +101,7 @@ export function POSSales() {
     };
 
     try {
-      const response = await axios.post('http://localhost:5000/api/sales', saleData);
+      const response = await axios.post(`${API_BASE_URL}/sales`, saleData);
       if (response.status === 201 || response.status === 200) {
         alert("Sale Completed Successfully! 🎉");
         clearCart();

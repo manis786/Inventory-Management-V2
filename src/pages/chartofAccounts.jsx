@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../config/api';
 import { Folder, FileText, PlusCircle, Edit, RefreshCw, ChevronDown, ChevronRight, Trash2, FolderOpen } from 'lucide-react';
 import toast from 'react-hot-toast'; 
 import Swal from 'sweetalert2';
@@ -19,7 +20,7 @@ export const ChartOfAccounts = () => {
     const [expandedNodes, setExpandedNodes] = useState({});
 
     // Backend API URL
-    const API_URL = 'http://localhost:5000/api/finance/coa';
+    const API_URL = `${API_BASE_URL}/finance/coa`;
 
     const fetchAccounts = async () => {
         try {
@@ -115,7 +116,7 @@ export const ChartOfAccounts = () => {
             <div key={node._id} className="pl-6 py-1">
                 <div 
                     onClick={() => node.isGroup && toggleNode(node._id)}
-                    className="flex items-center justify-between group p-2 hover:bg-slate-50 rounded-lg transition cursor-pointer"
+                    className="flex items-center justify-between group p-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition cursor-pointer"
                 >
                     <div className="flex items-center gap-3">
                         {/* Expand/Collapse Arrows for Group Nodes */}
@@ -132,22 +133,22 @@ export const ChartOfAccounts = () => {
                             <FileText size={18} className="text-slate-400" />
                         )}
                         
-                        <span className="font-mono text-xs font-bold text-slate-500">{node.code}</span>
-                        <span className="text-sm text-slate-700 font-medium">{node.name}</span>
+                        <span className="font-mono text-xs font-bold text-slate-500 dark:text-slate-400">{node.code}</span>
+                        <span className="text-sm text-slate-700 dark:text-slate-200 font-medium">{node.name}</span>
                     </div>
 
                     {/* Action Buttons Container (Hover Magic) */}
                     <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-opacity">
                         <button 
                             onClick={(e) => { e.stopPropagation(); handleEditClick(node); }}
-                            className="p-1 hover:bg-slate-200 text-slate-500 hover:text-indigo-600 rounded transition"
+                            className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded transition"
                             title="Edit Account"
                         >
                             <Edit size={14} />
                         </button>
                         <button 
                             onClick={(e) => { e.stopPropagation(); handleDelete(node); }}
-                            className="p-1 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded transition"
+                            className="p-1 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 rounded transition"
                             title="Delete Account"
                         >
                             <Trash2 size={14} />
@@ -162,23 +163,23 @@ export const ChartOfAccounts = () => {
     };
 
     return (
-        <div className="max-w-4xl mx-auto p-6 bg-white rounded-2xl shadow-sm border border-slate-100">
+        <div className="max-w-4xl mx-auto p-6 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 transition-colors duration-200">
             {/* Header section */}
             <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-4">
-                    <h2 className="text-lg font-bold text-slate-800">Chart of Accounts</h2>
+                    <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Chart of Accounts</h2>
                     {/* Expand & Collapse Utilities */}
                     {accounts.length > 0 && !loading && (
-                        <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-100">
+                        <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-800 p-1 rounded-xl border border-slate-100 dark:border-slate-700">
                             <button 
                                 onClick={expandAll}
-                                className="text-[10px] font-black text-indigo-600 hover:bg-indigo-50 px-2.5 py-1.5 rounded-lg transition"
+                                className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 px-2.5 py-1.5 rounded-lg transition"
                             >
                                 📂 Expand All
                             </button>
                             <button 
                                 onClick={collapseAll}
-                                className="text-[10px] font-black text-slate-500 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg transition"
+                                className="text-[10px] font-black text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 px-2.5 py-1.5 rounded-lg transition"
                             >
                                 📁 Collapse All
                             </button>
@@ -214,7 +215,7 @@ export const ChartOfAccounts = () => {
                     </button>
                 </div>
             ) : (
-                <div className="divide-y divide-slate-50">
+                <div className="divide-y divide-slate-50 dark:divide-slate-800">
                     {accounts.map((acc) => renderAccountNode(acc))}
                 </div>
             )}
