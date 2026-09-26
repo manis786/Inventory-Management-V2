@@ -8,9 +8,11 @@ import { Input } from '../components/ui/Input';
 import { KPICard } from '../components/ui/KPICard';
 import { StatusBadge } from '../components/shared/StatusBadge';
 import { formatPKR } from '../data/store';
-import { Users, PlusCircle, FileText, Settings, BookOpen } from 'lucide-react';
+import { Users, PlusCircle, FileText, Settings, BookOpen, Trash2 } from 'lucide-react';
+import { useApp } from '../context/AppContext';
 
 export function Customers() {
+  const { addToast } = useApp();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,6 +39,7 @@ export function Customers() {
       setLoading(false);
     } catch (err) {
       console.error("Error fetching customers:", err);
+      setLoading(false);
     }
   };
 
@@ -47,21 +50,38 @@ export function Customers() {
   const totalReceivables = customers.reduce((sum, c) => sum + (c.balance || 0), 0);
 
   // Submit Form (Create or Update)
- const handleFormSubmit = async (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
     try {
       if (editingCust) {
         await axios.put(`${API_BASE_URL}/customers/${editingCust._id}`, formData);
+        addToast?.("Customer updated successfully!", "success");
       } else {
         await axios.post(`${API_BASE_URL}/customers`, formData);
+        addToast?.("Customer registered successfully!", "success");
       }
       setFormModalOpen(false);
-      
-      // FIX: Yahan manual refresh force karo agar AppContext auto-update nahi ho raha
-      window.location.reload(); 
-      // Ya phir: fetchCustomers(); 
+      await fetchCustomers();
     } catch (err) {
-      alert("Error saving customer");
+      console.error("Save Customer Error:", err);
+      alert(err.response?.data?.error || "Error saving customer");
+    }
+  };
+
+  const handleDeleteCustomer = async (cust) => {
+    if (cust.balance > 0) {
+      alert(`Customer has an outstanding balance of ${formatPKR(cust.balance)}. Please clear balance first!`);
+      return;
+    }
+    if (!window.confirm(`Are you sure you want to delete ${cust.name}?`)) return;
+
+    try {
+      await axios.delete(`${API_BASE_URL}/customers/${cust._id}`);
+      addToast?.("Customer deleted successfully!", "success");
+      await fetchCustomers();
+    } catch (err) {
+      console.error("Delete Customer Error:", err);
+      alert(err.response?.data?.error || "Failed to delete customer");
     }
   };
 
@@ -72,13 +92,17 @@ export function Customers() {
       phone: cust.phone || '',
       email: cust.email || '',
       address: cust.address || '',
-      balance: String(cust.balance)
+      balance: String(cust.balance || 0),
+      creditLimit: cust.creditLimit || 0,
+      creditDays: cust.creditDays || 30,
+      isCreditEnabled: cust.isCreditEnabled ?? true,
+      status: cust.status || 'active'
     });
     setFormModalOpen(true);
   };
 
   const columns = [
-    { key: '_id', label: 'ID' },
+    { key: '_id', label: 'ID', render: (row) => <span className="font-mono text-xs text-slate-400">{row._id.slice(-6)}</span> },
     { key: 'name', label: 'Customer Name', render: (row) => <span className="font-bold">{row.name}</span> },
     { key: 'phone', label: 'Phone' },
     {
@@ -91,7 +115,10 @@ export function Customers() {
       key: 'actions',
       label: 'Actions',
       render: (row) => (
-        <Button variant="ghost" size="sm" icon={Settings} onClick={() => handleOpenEdit(row)} />
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" icon={Settings} onClick={() => handleOpenEdit(row)} />
+          <Button variant="ghost" size="sm" icon={Trash2} className="text-rose-500 hover:text-rose-700" onClick={() => handleDeleteCustomer(row)} />
+        </div>
       )
     }
   ];

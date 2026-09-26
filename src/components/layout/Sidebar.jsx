@@ -6,7 +6,7 @@ import {
   ChevronDown, Scale, FileText, TrendingUp, PackageCheck, History, BookOpen, 
   RefreshCw, Coins, PieChart, Clock, FileX, PackageSearch, BarChart4, 
   TrendingDown, Award, AlertTriangle, Landmark, BadgePercent, ArrowRightLeft, 
-  Briefcase, FileSpreadsheet, Contact2, UserCheck, ShoppingCartIcon
+  Briefcase, FileSpreadsheet, Contact2, UserCheck, ShoppingCartIcon,ShieldCheck
 } from 'lucide-react';
 
 export function Sidebar() {
@@ -92,6 +92,15 @@ export function Sidebar() {
             { id: 'inter_branch', name: 'Inter-Branch Transfer', icon: ArrowRightLeft }
           ]
         }
+      ]
+    },
+    {
+      title: 'Administration',
+      items: [
+        { name: 'Expenses', icon: Coins },
+        { name: 'Human Resources', icon: Contact2 },
+        { name: 'Users & Roles', icon: ShieldCheck },
+        { name: 'Settings', icon: Store }
       ]
     }
   ];

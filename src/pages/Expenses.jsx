@@ -108,7 +108,7 @@ export function Expenses() {
 
   const handleConfirmDelete = () => {
     if (expToDelete) {
-      deleteExpense(expToDelete.id);
+      deleteExpense(expToDelete._id || expToDelete.id);
       setDeleteConfirmOpen(false);
       setExpToDelete(null);
     }
@@ -138,7 +138,12 @@ export function Expenses() {
 
   // Columns
   const columns = [
-    { key: 'id', label: 'ID', sortable: true },
+    { 
+      key: '_id', 
+      label: 'ID', 
+      sortable: true,
+      render: (row) => <span className="font-mono text-xs text-slate-500">{row.id || (row._id ? `EXP-${row._id.slice(-5).toUpperCase()}` : '')}</span>
+    },
     { key: 'date', label: 'Billing Date', sortable: true },
     {
       key: 'title',

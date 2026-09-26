@@ -36,7 +36,9 @@ export function CommandPalette() {
     setSelectedIndex(0);
   }, [query]);
 
-  // Command Definitions
+  // Command Definitions (Safely checking users array with fallback)
+  const safeUsers = Array.isArray(users) ? users : [];
+
   const commands = [
     { id: 'nav_dash', label: 'Go to Dashboard', category: 'Navigation', icon: LayoutDashboard, action: () => { setActiveModule('Dashboard'); setIsOpen(false); } },
     { id: 'nav_pos', label: 'Go to POS Sales', category: 'Navigation', icon: Calculator, action: () => { setActiveModule('POS Sales'); setIsOpen(false); } },
@@ -48,13 +50,13 @@ export function CommandPalette() {
     { id: 'nav_sett', label: 'Go to General Settings', category: 'Navigation', icon: Settings, action: () => { setActiveModule('Settings'); setIsOpen(false); } },
     { id: 'pref_theme', label: `Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`, category: 'System', icon: theme === 'light' ? Moon : Sun, action: () => { toggleTheme(); setIsOpen(false); } },
     
-    // User sessions from context
-    ...users.map((u) => ({
-      id: `user_${u.id}`,
-      label: `Switch Session to: ${u.name}`,
+    // User sessions from context with safe mapping
+    ...safeUsers.map((u) => ({
+      id: `user_${u._id || u.id}`,
+      label: `Switch Session to: ${u.name || u.userName}`,
       category: 'Switch User Session',
       icon: Users,
-      action: () => { loginAsUser(u.id); setIsOpen(false); addToast(`Switched to ${u.name}`, 'success'); }
+      action: () => { loginAsUser(u._id || u.id); setIsOpen(false); addToast(`Switched to ${u.name || u.userName}`, 'success'); }
     }))
   ];
 
@@ -103,3 +105,5 @@ export function CommandPalette() {
     </>
   );
 }
+
+export default CommandPalette;

@@ -43,26 +43,31 @@ export function UsersRoles() {
     }
 
     addUser({
+      userName: formData.username,
       name: formData.name,
       email: formData.email,
       phone: formData.phone,
-      username: formData.username,
       role: formData.role,
-      branch: formData.branch
+      branch: formData.branch,
+      password: 'User@123'
     });
 
     setModalOpen(false);
   };
 
   const handleToggleStatus = (user) => {
-    if (user.id === currentUser.id) {
+    const userId = user._id || user.id;
+    const currentId = currentUser?._id || currentUser?.id;
+    if (userId === currentId) {
       addToast('You cannot deactivate your own logged-in user profile!', 'error');
       return;
     }
 
+    const currentIsActive = user.isActive !== undefined ? user.isActive : user.status === 'active';
     const updated = {
       ...user,
-      status: user.status === 'active' ? 'inactive' : 'active'
+      isActive: !currentIsActive,
+      status: !currentIsActive ? 'active' : 'inactive'
     };
     updateUser(updated);
   };
@@ -102,8 +107,8 @@ export function UsersRoles() {
       sortable: true,
       render: (row) => (
         <div className="flex flex-col">
-          <span className="font-bold text-slate-805 dark:text-slate-100">{row.name}</span>
-          <span className="text-[10px] text-slate-400">Username: {row.username} | Email: {row.email}</span>
+          <span className="font-bold text-slate-800 dark:text-slate-100">{row.name || row.userName}</span>
+          <span className="text-[10px] text-slate-400">Username: {row.userName || row.username} | Email: {row.email}</span>
         </div>
       )
     },
@@ -114,52 +119,57 @@ export function UsersRoles() {
       render: (row) => (
         <span className={`px-2 py-0.5 rounded-full text-[9px] font-black border uppercase tracking-wider ${
           row.role === 'ADMIN'
-            ? 'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-950/20 dark:text-rose-405'
+            ? 'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-950/20 dark:text-rose-400'
             : row.role === 'MANAGER'
               ? 'bg-indigo-50 border-indigo-200 text-indigo-700 dark:bg-indigo-950/20 dark:text-indigo-400'
               : row.role === 'CASHIER'
                 ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400'
                 : 'bg-cyan-50 border-cyan-200 text-cyan-700 dark:bg-cyan-950/20 dark:text-cyan-400'
-        }`}>,StartLine:122,TargetContent:
-          {row.role}
+        }`}>
+          {row.role || 'CASHIER'}
         </span>
       )
     },
-    { key: 'branch', label: 'Assigned Outlet', sortable: true },
-    { key: 'lastLogin', label: 'Last Login time' },
+    { key: 'branch', label: 'Assigned Outlet', sortable: true, render: (row) => row.branch || 'Karachi HQ' },
+    { key: 'lastLogin', label: 'Last Login time', render: (row) => row.lastLogin || (row.updatedAt ? new Date(row.updatedAt).toLocaleDateString() : 'Recent') },
     {
       key: 'status',
       label: 'Status',
       sortable: true,
-      render: (row) => <StatusBadge status={row.status} />
+      render: (row) => <StatusBadge status={row.status || (row.isActive ? 'active' : 'inactive')} />
     },
     {
       key: 'actions',
       label: 'Controls',
       sortable: false,
       className: 'text-right',
-      render: (row) => (
-        <div className="flex justify-end gap-2">
-          {row.id !== currentUser.id && (
+      render: (row) => {
+        const rowId = row._id || row.id;
+        const myId = currentUser?._id || currentUser?.id;
+        const isActive = row.isActive !== undefined ? row.isActive : row.status === 'active';
+        return (
+          <div className="flex justify-end gap-2">
+            {rowId !== myId && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="py-1 px-2 text-xs font-semibold"
+                onClick={() => handleToggleStatus(row)}
+              >
+                {isActive ? 'Block' : 'Activate'}
+              </Button>
+            )}
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
-              className="py-1 px-2 text-xs font-semibold"
-              onClick={() => handleToggleStatus(row)}
+              className="py-1 px-2 text-xs font-bold text-indigo-600 hover:underline cursor-pointer"
+              onClick={() => loginAsUser(rowId)}
             >
-              {row.status === 'active' ? 'Block' : 'Activate'}
+              Masquerade
             </Button>
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="py-1 px-2 text-xs font-bold text-indigo-600 hover:underline cursor-pointer"
-            onClick={() => loginAsUser(row.id)}
-          >
-            Masquerade
-          </Button>
-        </div>
-      )
+          </div>
+        );
+      }
     }
   ];
 

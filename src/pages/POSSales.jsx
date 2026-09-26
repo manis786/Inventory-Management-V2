@@ -7,7 +7,7 @@ import { Minus, Plus, Trash2, CreditCard, Banknote, Smartphone, BookOpen, Shoppi
 
 export function POSSales() {
   const {
-    products, cart, addToCart, removeFromCart, updateCartQty,
+    products, fetchProducts, cart, addToCart, removeFromCart, updateCartQty,
     cartDiscount, setCartDiscount, cartTaxPercent, setCartTaxPercent,
     customers, cartCustomer, setCartCustomer,
     cartPaymentMethod, setCartPaymentMethod, clearCart
@@ -55,10 +55,14 @@ export function POSSales() {
 
   const handleBarcodeSubmit = (e) => {
     e.preventDefault();
-    if (!barcodeInput.trim()) return;
+    const query = barcodeInput.trim();
+    if (!query) return;
 
     const matchedProduct = (products || []).find(
-      p => p.sku === barcodeInput.trim() || p.id === barcodeInput.trim()
+      p => (p.barcode && p.barcode.toLowerCase() === query.toLowerCase()) || 
+           (p.sku && p.sku.toLowerCase() === query.toLowerCase()) || 
+           (p.id && p.id.toLowerCase() === query.toLowerCase()) || 
+           p._id === query
     );
 
     if (matchedProduct) {
@@ -109,6 +113,9 @@ export function POSSales() {
         setCartCustomer(null);
         if (setCartDiscount) setCartDiscount({ type: 'percentage', value: 0 });
         if (setCartTaxPercent) setCartTaxPercent(0);
+        if (typeof fetchProducts === 'function') {
+          await fetchProducts();
+        }
       }
     } catch (error) {
       console.error("Checkout Error:", error);

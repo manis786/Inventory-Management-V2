@@ -14,7 +14,7 @@ import { PlusCircle, Trash2, Eye } from 'lucide-react';
 export function Purchases() {
   const { 
     purchases = [], suppliers = [], products = [], 
-    setProducts, addPurchaseOrder, receivePurchaseOrder, 
+    fetchProducts, setProducts, addPurchaseOrder, receivePurchaseOrder, 
     addToast, addMovement, fetchPurchases 
   } = useApp();
 
@@ -31,7 +31,7 @@ export function Purchases() {
   const handlePurchaseStatusChange = async (poId, newStatus) => {
     const selectedPO = purchases.find(p => p._id === poId);
     if (!selectedPO) return;
-console.log("--- Approval Process Started ---");
+
     if (newStatus === 'Approved' && selectedPO.status === 'Approved') {
       alert("Yeh PO pehle se Approved hai!");
       return;
@@ -40,32 +40,17 @@ console.log("--- Approval Process Started ---");
     if (!window.confirm(`Kya aap status "${newStatus}" karna chahte hain?`)) return;
 
     try {
-      await axios.put(`${API_BASE_URL}/purchases/${poId}`, { status: newStatus });
-console.log("Items to process:", selectedPO.items);
-      if (newStatus === 'Approved') {
-        await receivePurchaseOrder(poId);
-        for (const item of selectedPO.items) {
-          const movementData = {
-    product: item.product?._id || item.productId, // Backend 'product' mang raha hai
-    type: 'PURCHASE',                             // Backend 'PURCHASE' enum expect kar raha hai
-    quantity: Number(item.quantity),
-    price: Number(item.costPrice),
-    totalAmount: Number(item.quantity) * Number(item.costPrice),
-    refId: String(selectedPO.poNumber || poId),
-    purchaseId: poId,
-    supplier: selectedPO.supplier?._id
-  };
-        console.log("Sending to API:", movementData); // Console mein check karen
-  await addMovement(movementData);  
-         console.log("Successfully posted movement for:", item.product?.name);
-        }
-        console.error("FAILED to post movement for:", item.product?.name, err);
-      }
-      console.log("--- Approval Process Finished ---");
+      // Backend automatically updates status, stocks in, posts transactions and ledger
+      const res = await axios.put(`${API_BASE_URL}/purchases/${poId}`, { status: newStatus });
+      
       await fetchPurchases();
-      addToast('Status updated successfully!', 'success');
+      if (typeof fetchProducts === 'function') {
+        await fetchProducts();
+      }
+      addToast(res.data?.message || 'Status updated successfully!', 'success');
     } catch (err) {
-      addToast('Error updating status', 'error');
+      console.error("Update Status Error:", err);
+      addToast(err.response?.data?.message || 'Error updating status', 'error');
     }
   };
 
