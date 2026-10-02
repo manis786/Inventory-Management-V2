@@ -34,9 +34,19 @@ export function Settings() {
   const [storeAddress, setStoreAddress] = useState(storeSettings.address || '');
   const [storePhone, setStorePhone] = useState(storeSettings.phone || '');
   const [storeEmail, setStoreEmail] = useState(storeSettings.email || '');
-  const [storeNtn, setStoreNtn] = useState(storeSettings.ntn || '');
-
   const [saving, setSaving] = useState(false);
+
+  React.useEffect(() => {
+    if (storeSettings) {
+      if (storeSettings.name) setStoreName(storeSettings.name);
+      if (storeSettings.tagline) setStoreTagline(storeSettings.tagline);
+      if (storeSettings.owner) setStoreOwner(storeSettings.owner);
+      if (storeSettings.address) setStoreAddress(storeSettings.address);
+      if (storeSettings.phone) setStorePhone(storeSettings.phone);
+      if (storeSettings.email) setStoreEmail(storeSettings.email);
+      if (storeSettings.ntn) setStoreNtn(storeSettings.ntn);
+    }
+  }, [storeSettings]);
 
   // Handle save
   const handleSave = async (e) => {

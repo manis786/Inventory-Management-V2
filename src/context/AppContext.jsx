@@ -60,6 +60,7 @@ export function AppProvider({ children }) {
   const [users, setUsers] = useState(USERS);
   const [currentUser, setCurrentUser] = useState(USERS[0]);
   const [storeSettings, setStoreSettings] = useState(STORE_INFO);
+  const [employees, setEmployees] = useState([]);
 
   // --- Cart States (POS) ---
   const [cart, setCart] = useState([]);
@@ -267,15 +268,17 @@ const addMovement = async (movementData) => {
   const fetchUsers = async () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/auth/getAllusers`);
-      const userList = res.data?.data || (Array.isArray(res.data) ? res.data : []);
-      if (userList.length > 0) {
-        setUsers(userList);
-      }
+      console.log("Fetched Users Response:", res.data); // Debugging ke liye
+      
+      // Response structure ko handle karne ke liye safe check
+      const userList = res.data?.data || res.data?.users || (Array.isArray(res.data) ? res.data : []);
+      setUsers(userList);
     } catch (err) {
       console.error("Fetch Users Error:", err);
+      addToast('Failed to load user list', 'error');
     }
   };
-
+ 
   // Initial Data Fetch
   useEffect(() => {
     fetchProducts();
@@ -286,6 +289,8 @@ const addMovement = async (movementData) => {
     fetchSales();
     fetchExpenses();
     fetchUsers();
+    fetchStoreSettings();
+    fetchEmployees();
 
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
     if (isLoggedIn) {
@@ -328,10 +333,95 @@ const addMovement = async (movementData) => {
     }
   };
 
+  // --- Store Settings Handlers (Real Backend API with Fallback) ---
+  const fetchStoreSettings = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/settings`);
+      if (res.data?.success && res.data?.data) {
+        setStoreSettings(res.data.data);
+        if (res.data.data.cartTaxPercent != null) {
+          setCartTaxPercent(res.data.data.cartTaxPercent);
+        }
+      }
+    } catch (err) {
+      console.warn("Could not fetch store settings, using defaults:", err.message);
+    }
+  };
+
   const saveStoreSettings = async (settings) => {
-    setStoreSettings(settings);
-    localStorage.setItem('storeSettings', JSON.stringify(settings));
-    addToast('Store settings saved successfully!', 'success');
+    try {
+      const res = await axios.put(`${API_BASE_URL}/settings`, settings);
+      const updated = res.data?.data || settings;
+      setStoreSettings(updated);
+      localStorage.setItem('storeSettings', JSON.stringify(updated));
+      addToast('Store settings saved successfully!', 'success');
+      return updated;
+    } catch (err) {
+      console.error("Save Store Settings Error:", err);
+      setStoreSettings(settings);
+      localStorage.setItem('storeSettings', JSON.stringify(settings));
+      addToast('Store settings saved locally!', 'info');
+      return settings;
+    }
+  };
+
+  // --- Human Resources / Employees Handlers (Real Backend API) ---
+  const fetchEmployees = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/employees`);
+      if (res.data?.success && Array.isArray(res.data?.data)) {
+        setEmployees(res.data.data);
+      }
+    } catch (err) {
+      console.warn("Could not fetch employees:", err.message);
+    }
+  };
+
+  const addEmployee = async (employeeData) => {
+    try {
+      const res = await axios.post(`${API_BASE_URL}/employees`, employeeData);
+      await fetchEmployees();
+      addToast('Employee registered successfully!', 'success');
+      return res.data;
+    } catch (err) {
+      console.error("Add Employee Error:", err);
+      addToast(err.response?.data?.message || 'Failed to add employee', 'error');
+      throw err;
+    }
+  };
+
+  const updateEmployee = async (id, employeeData) => {
+    try {
+      await axios.put(`${API_BASE_URL}/employees/${id}`, employeeData);
+      await fetchEmployees();
+      addToast('Employee updated successfully!', 'success');
+    } catch (err) {
+      console.error("Update Employee Error:", err);
+      addToast(err.response?.data?.message || 'Failed to update employee', 'error');
+      throw err;
+    }
+  };
+
+  const deleteEmployee = async (id) => {
+    try {
+      await axios.delete(`${API_BASE_URL}/employees/${id}`);
+      await fetchEmployees();
+      addToast('Employee deleted successfully!', 'success');
+    } catch (err) {
+      console.error("Delete Employee Error:", err);
+      addToast(err.response?.data?.message || 'Failed to delete employee', 'error');
+    }
+  };
+
+  const logAttendance = async (id, attendanceData) => {
+    try {
+      await axios.post(`${API_BASE_URL}/employees/${id}/attendance`, attendanceData);
+      await fetchEmployees();
+      addToast('Attendance logged successfully!', 'success');
+    } catch (err) {
+      console.error("Log Attendance Error:", err);
+      addToast(err.response?.data?.message || 'Failed to log attendance', 'error');
+    }
   };
 
   const addUser = async (userData) => {
@@ -429,7 +519,8 @@ const addMovement = async (movementData) => {
       expenses, setExpenses, addExpense, deleteExpense, fetchExpenses,
       transactions, setTransactions,
       users, setUsers, addUser, updateUser, fetchUsers, loginAsUser, currentUser,
-      storeSettings, setStoreSettings, saveStoreSettings,
+      storeSettings, setStoreSettings, saveStoreSettings, fetchStoreSettings,
+      employees, setEmployees, fetchEmployees, addEmployee, updateEmployee, deleteEmployee, logAttendance,
       updateSupplier, addSupplierPayment
     }}>
       {children}

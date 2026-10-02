@@ -10,11 +10,11 @@ import { Tabs } from '../components/ui/Tabs';
 import { StatusBadge } from '../components/shared/StatusBadge';
 import { ActivityTimeline } from '../components/shared/ActivityTimeline';
 import { USER_ACTIVITIES } from '../data/users';
-import { PlusCircle, ShieldAlert, ShieldCheck, Check, X, Shield, History, Users } from 'lucide-react';
+import { PlusCircle, Check, X, Shield, History, Users } from 'lucide-react';
 
 export function UsersRoles() {
   const {
-    users,
+    users = [],
     addUser,
     updateUser,
     loginAsUser,
@@ -23,8 +23,6 @@ export function UsersRoles() {
   } = useApp();
 
   const [activeTab, setActiveTab] = useState('list');
-
-  // Add User states
   const [modalOpen, setModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -53,6 +51,20 @@ export function UsersRoles() {
     });
 
     setModalOpen(false);
+  };
+
+  const handleRoleChange = async (user, newRole) => {
+    try {
+      const userId = user._id || user.id;
+      const updated = {
+        ...user,
+        role: newRole
+      };
+      await updateUser(updated);
+      addToast(`Role updated to ${newRole} successfully!`, 'success');
+    } catch (err) {
+      addToast('Failed to update role', 'error');
+    }
   };
 
   const handleToggleStatus = (user) => {
@@ -84,7 +96,6 @@ export function UsersRoles() {
     setModalOpen(true);
   };
 
-  // Matrix check helper
   const roleHasAccess = (role, mod) => {
     const permissions = {
       ADMIN: ['Dashboard', 'POS Sales', 'Products', 'Categories', 'Inventory', 'Purchases', 'Suppliers', 'Customers', 'Finance', 'Expenses', 'Reports', 'Users & Roles', 'Settings'],
@@ -114,24 +125,30 @@ export function UsersRoles() {
     },
     {
       key: 'role',
-      label: 'Security Role',
+      label: 'Security Role Assignment',
       sortable: true,
       render: (row) => (
-        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black border uppercase tracking-wider ${
-          row.role === 'ADMIN'
-            ? 'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-950/20 dark:text-rose-400'
-            : row.role === 'MANAGER'
-              ? 'bg-indigo-50 border-indigo-200 text-indigo-700 dark:bg-indigo-950/20 dark:text-indigo-400'
-              : row.role === 'CASHIER'
-                ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400'
-                : 'bg-cyan-50 border-cyan-200 text-cyan-700 dark:bg-cyan-950/20 dark:text-cyan-400'
-        }`}>
-          {row.role || 'CASHIER'}
-        </span>
+        <select
+          value={row.role || 'CASHIER'}
+          onChange={(e) => handleRoleChange(row, e.target.value)}
+          className={`px-2 py-1 rounded-md text-[10px] font-bold border uppercase tracking-wider bg-white dark:bg-slate-900 cursor-pointer ${
+            row.role === 'ADMIN'
+              ? 'border-rose-300 text-rose-700 dark:text-rose-400'
+              : row.role === 'MANAGER'
+                ? 'border-indigo-300 text-indigo-700 dark:text-indigo-400'
+                : row.role === 'CASHIER'
+                  ? 'border-emerald-300 text-emerald-700 dark:text-emerald-400'
+                  : 'border-cyan-300 text-cyan-700 dark:text-cyan-400'
+          }`}
+        >
+          <option value="ADMIN">Administrator</option>
+          <option value="MANAGER">Branch Manager</option>
+          <option value="CASHIER">Cashier Counter</option>
+          <option value="AUDITOR">Financial Auditor</option>
+        </select>
       )
     },
     { key: 'branch', label: 'Assigned Outlet', sortable: true, render: (row) => row.branch || 'Karachi HQ' },
-    { key: 'lastLogin', label: 'Last Login time', render: (row) => row.lastLogin || (row.updatedAt ? new Date(row.updatedAt).toLocaleDateString() : 'Recent') },
     {
       key: 'status',
       label: 'Status',
@@ -177,7 +194,6 @@ export function UsersRoles() {
 
   return (
     <div className="space-y-5 animate-fade-in">
-      {/* Header section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
         <div>
           <h1 className="text-xl md:text-2xl font-black text-slate-800 dark:text-white tracking-tight">
@@ -187,17 +203,11 @@ export function UsersRoles() {
             Define system credentials, set granular screen permissions, and audit user logs.
           </p>
         </div>
-        <Button
-          variant="primary"
-          size="sm"
-          icon={PlusCircle}
-          onClick={handleOpenAdd}
-        >
+        <Button variant="primary" size="sm" icon={PlusCircle} onClick={handleOpenAdd}>
           Add Staff Account
         </Button>
       </div>
 
-      {/* Tabs */}
       <Tabs
         activeTab={activeTab}
         onChange={setActiveTab}
@@ -209,18 +219,16 @@ export function UsersRoles() {
         ]}
       />
 
-      {/* EMPLOYEE DATABASE */}
       {activeTab === 'list' && (
         <Table
           columns={listColumns}
-          data={users}
+          data={Array.isArray(users) ? users : []}
           sortColumn="id"
           sortDirection="asc"
           emptyMessage="No employees registered in the system."
         />
       )}
 
-      {/* PERMISSIONS MATRIX */}
       {activeTab === 'matrix' && (
         <Card className="max-w-3xl mx-auto overflow-hidden">
           <CardHeader className="bg-slate-50 dark:bg-slate-950/20 border-b border-slate-100 dark:border-slate-800">
@@ -233,7 +241,7 @@ export function UsersRoles() {
                   <th className="p-4 font-bold text-slate-800 dark:text-slate-200">System Modules</th>
                   <th className="p-4 text-center">Administrator</th>
                   <th className="p-4 text-center">Branch Manager</th>
-                  <th className="p-4 text-center">Cashier Terminal</th>
+                  <th className="p-4 text-center">Cashier Counter</th>
                   <th className="p-4 text-center">Financial Auditor</th>
                 </tr>
               </thead>
@@ -267,7 +275,6 @@ export function UsersRoles() {
         </Card>
       )}
 
-      {/* SYSTEM ACCESS AUDITS TIMELINE */}
       {activeTab === 'audit' && (
         <Card className="max-w-2xl mx-auto">
           <CardHeader>
@@ -279,13 +286,7 @@ export function UsersRoles() {
         </Card>
       )}
 
-      {/* REGISTER STAFF MODAL */}
-      <Modal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title="Add Staff Account Credentials"
-        size="md"
-      >
+      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Add Staff Account Credentials" size="md">
         <form onSubmit={handleFormSubmit} className="space-y-4">
           <Input
             label="Full Employee Name"
@@ -294,7 +295,6 @@ export function UsersRoles() {
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           />
-
           <div className="grid grid-cols-2 gap-3">
             <Input
               label="Username prefix"
@@ -310,7 +310,6 @@ export function UsersRoles() {
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
             />
           </div>
-
           <Input
             label="Corporate Email Address"
             type="email"
@@ -319,7 +318,6 @@ export function UsersRoles() {
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           />
-
           <div className="grid grid-cols-2 gap-3">
             <Select
               label="Assigned Security Role"
@@ -331,7 +329,6 @@ export function UsersRoles() {
               <option value="CASHIER">Cashier Counter</option>
               <option value="AUDITOR">Financial Auditor</option>
             </Select>
-
             <Select
               label="Work Outlet Location"
               value={formData.branch}
@@ -341,8 +338,7 @@ export function UsersRoles() {
               <option value="Lahore Branch">Lahore Branch Outlet</option>
             </Select>
           </div>
-
-          <div className="flex justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex justify-end gap-2.5 pt-4 border-l-0 border-t border-slate-100 dark:border-slate-800">
             <Button variant="outline" type="button" onClick={() => setModalOpen(false)}>
               Cancel
             </Button>
@@ -355,4 +351,5 @@ export function UsersRoles() {
     </div>
   );
 }
+
 export default UsersRoles;

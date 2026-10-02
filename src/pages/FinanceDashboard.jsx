@@ -7,23 +7,63 @@ import {
   RefreshCw, Download, CreditCard, FileText, Plus 
 } from 'lucide-react';
 
+import axios from 'axios';
+import { API_BASE_URL } from '../config/api';
+
 // Apne alag se banaye hue components import kar liye
 import ReceivePaymentForm from '../components/ui/ReceivePaymentForm'; 
-import VoucherForm from '../components/ui/VoucherForm'
+import VoucherForm from '../components/ui/VoucherForm';
 
-const stats = [
-  { label: 'Receivables', value: 'Rs 450,000', icon: ArrowUpCircle, color: 'text-emerald-600' },
-  { label: 'Payables', value: 'Rs 210,000', icon: ArrowDownCircle, color: 'text-rose-600' },
-  { label: 'Cash Balance', value: 'Rs 85,000', icon: Wallet, color: 'text-indigo-600' },
-  { label: 'Bank Balance', value: 'Rs 720,000', icon: Landmark, color: 'text-blue-600' },
-];
-
-const profitData = [{ name: 'Profit', value: 850000 }, { name: 'Expense', value: 340000 }];
+const iconMap = {
+  'Receivables': ArrowUpCircle,
+  'Payables': ArrowDownCircle,
+  'Cash Balance': Wallet,
+  'Bank Balance': Landmark
+};
 
 export const FinanceDashboard = () => {
-  // States to toggle views on dashboard
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [showVoucherForm, setShowVoucherForm] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState([
+    { label: 'Receivables', value: 'Rs 0', icon: ArrowUpCircle, color: 'text-emerald-600' },
+    { label: 'Payables', value: 'Rs 0', icon: ArrowDownCircle, color: 'text-rose-600' },
+    { label: 'Cash Balance', value: 'Rs 0', icon: Wallet, color: 'text-indigo-600' },
+    { label: 'Bank Balance', value: 'Rs 0', icon: Landmark, color: 'text-blue-600' },
+  ]);
+  const [profitData, setProfitData] = useState([
+    { name: 'Revenue', value: 0 },
+    { name: 'Expense', value: 0 },
+    { name: 'Net Profit', value: 0 }
+  ]);
+
+  const fetchSummary = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${API_BASE_URL}/reports/finance-summary`);
+      if (res.data?.success && res.data?.data) {
+        const d = res.data.data;
+        if (d.stats) {
+          setStats(d.stats.map(s => ({
+            ...s,
+            value: `Rs ${Number(s.value || 0).toLocaleString()}`,
+            icon: iconMap[s.label] || Wallet
+          })));
+        }
+        if (d.profitData) {
+          setProfitData(d.profitData);
+        }
+      }
+    } catch (err) {
+      console.error("Finance Summary Error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSummary();
+  }, []);
 
   return (
     <div className="p-8 bg-slate-50 min-h-screen font-sans">

@@ -280,7 +280,7 @@ const kpis = useMemo(() => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] w-full gap-4">
         <div className="p-4 bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 rounded-2xl text-center max-w-md">
-          <p className="text-rose-600 dark:text-rose-400 font-bold text-sm mb-1">⚠️ Dashboard Load Failed</p>
+          <p className="text-rose-600 dark:text-rose-400 font-bold text-sm mb-1">⚠️ Server is Down</p>
           <p className="text-rose-500 dark:text-rose-500 text-xs mb-3">{error}</p>
           <button
             onClick={() => { window.location.reload(); }}
